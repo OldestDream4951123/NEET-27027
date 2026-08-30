@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEET 2027 · Test Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E14;
+    --surface:#111826;
+    --surface-2:#161F30;
+    --border:#212B3B;
+    --text:#E8ECF3;
+    --muted:#7C8797;
+    --muted-2:#576073;
+    --physics:#5B8CFF;
+    --chemistry:#3ED9C4;
+    --botany:#7FD858;
+    --zoology:#FF9A62;
+    --amber:#F2B84B;
+    --done:#3A4658;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  ::selection{background:rgba(242,184,75,0.25);}
+
+  .wrap{max-width:920px;margin:0 auto;padding:28px 20px 80px;}
+
+  /* Header */
+  .hero{position:relative;padding-bottom:22px;margin-bottom:8px;border-bottom:1px solid var(--border);}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:10px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;letter-spacing:-0.01em;margin:0 0 6px;}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 22px;}
+
+  .stat-row{display:flex;gap:14px;flex-wrap:wrap;}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;flex:1;min-width:150px;}
+  .stat .num{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:22px;line-height:1;}
+  .stat .lbl{color:var(--muted);font-size:11.5px;margin-top:6px;letter-spacing:.02em;}
+  .stat.next .num{color:var(--amber);}
+
+  .progress-track{margin-top:14px;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--physics),var(--botany));border-radius:99px;transition:width .4s ease;}
+
+  /* Filters */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0 18px;}
+  .chip{font-family:'JetBrains Mono',monospace;font-size:12px;padding:7px 13px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s ease;}
+  .chip:hover{color:var(--text);border-color:var(--muted-2);}
+  .chip.active{background:var(--surface-2);color:var(--text);border-color:var(--muted-2);}
+  .toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:22px;color:var(--muted);font-size:12.5px;}
+  .toggle{width:34px;height:19px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);position:relative;cursor:pointer;flex-shrink:0;}
+  .toggle::after{content:'';position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:var(--muted);transition:all .15s ease;}
+  .toggle.on{background:rgba(242,184,75,0.18);border-color:var(--amber);}
+  .toggle.on::after{background:var(--amber);left:17px;}
+
+  /* Timeline */
+  .timeline{position:relative;padding-left:26px;}
+  .timeline::before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:1.5px;background:linear-gradient(var(--border),var(--border));}
+
+  .node{position:relative;margin-bottom:14px;}
+  .dot{position:absolute;left:-26px;top:22px;width:11px;height:11px;border-radius:50%;background:var(--bg);border:2px solid var(--muted-2);z-index:2;}
+  .node.done .dot{border-color:var(--muted-2);background:var(--done);}
+  .node.next .dot{border-color:var(--amber);background:var(--amber);box-shadow:0 0 0 4px rgba(242,184,75,0.18);}
+  .node.next::after{content:'';position:absolute;left:-21.5px;top:33px;bottom:-14px;width:1.5px;background:var(--amber);opacity:.5;}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;transition:border-color .15s ease;}
+  .node.next .card{border-color:rgba(242,184,75,0.35);}
+  .node.done .card{opacity:.62;}
+  .node.done .card:hover{opacity:.9;}
+
+  .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .card-id-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .test-id{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15.5px;}
+  .test-tag{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.05em;padding:2px 7px;border-radius:5px;background:var(--surface-2);color:var(--muted);text-transform:uppercase;}
+  .next-badge{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.08em;padding:2px 8px;border-radius:5px;background:rgba(242,184,75,0.15);color:var(--amber);}
+  .date-block{text-align:right;}
+  .date-txt{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);}
+  .days-txt{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:2px;}
+
+  .mini-progress{display:flex;align-items:center;gap:8px;margin-top:10px;}
+  .mini-track{flex:1;height:4px;border-radius:99px;background:var(--surface-2);overflow:hidden;}
+  .mini-fill{height:100%;background:var(--amber);border-radius:99px;}
+  .mini-count{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);white-space:nowrap;}
+
+  .subjects{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
+  @media(max-width:600px){.subjects{grid-template-columns:1fr;}}
+  .subj{border-left:2px solid var(--border);padding-left:10px;}
+  .subj-head{display:flex;align-items:center;gap:6px;margin-bottom:7px;}
+  .subj-dot{width:6px;height:6px;border-radius:50%;}
+  .subj-name{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+  .topic{display:flex;align-items:flex-start;gap:8px;padding:4px 0;cursor:pointer;user-select:none;}
+  .topic input{margin-top:3px;width:14px;height:14px;accent-color:var(--amber);cursor:pointer;flex-shrink:0;}
+  .topic span{font-size:13px;line-height:1.4;color:var(--text);}
+  .topic.checked span{color:var(--muted-2);text-decoration:line-through;text-decoration-color:var(--muted-2);}
+
+  .mock-note{margin-top:12px;padding:10px 12px;background:var(--surface-2);border-radius:8px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .mock-note label{display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11.5px;}
+  .mock-note input{accent-color:var(--amber);cursor:pointer;}
+
+  .empty{text-align:center;color:var(--muted);padding:60px 20px;font-size:13px;}
+
+  footer{text-align:center;color:var(--muted-2);font-size:11px;margin-top:40px;font-family:'JetBrains Mono',monospace;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Phase-01 (CF + OYM) · 2026–2027 · Type-2 (B / D / F)</div>
+    <h1>NEET Test Planner</h1>
+    <p class="sub">69 tests, one syllabus at a time. Check off chapters as you cover them — your progress is saved automatically.</p>
+    <div class="stat-row">
+      <div class="stat">
+        <div class="num" id="statDone">0 / 0</div>
+        <div class="lbl">CHAPTERS CHECKED</div>
+      </div>
+      <div class="stat next">
+        <div class="num" id="statNext">—</div>
+        <div class="lbl" id="statNextLbl">NEXT TEST</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="statRemaining">0</div>
+        <div class="lbl">TESTS REMAINING</div>
+      </div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="filters" id="filters"></div>
+  <div class="toggle-row">
+    <div class="toggle" id="upcomingToggle"></div>
+    <span id="upcomingLabel">Show all tests (including ones already past)</span>
+  </div>
+
+  <div class="timeline" id="timeline"></div>
+
+  <footer>Aakash Test Planner · Carry Forward &amp; One Year Medical · Batch window 17 Mar – 1 Apr 2026</footer>
+</div>
+
+<script>
+const TODAY = new Date('2026-08-30');
+
+// ---- Data -------------------------------------------------------------
+const T = { P:'Physics', C:'Chemistry', B:'Botany', Z:'Zoology' };
+function subj(p,c,b,z){ return {Physics:p, Chemistry:c, Botany:b, Zoology:z}; }
+
+const tests = [
+  {id:'PT-01', type:'PT', date:'2026-05-08', dateLabel:'8–10 May 2026', subjects: subj(
+    ['Electric Charges & Fields'],
+    ['Solutions'],
+    ['Sexual Reproduction in Flowering Plants — intro to pollination'],
+    ['Human Reproduction-I']
+  )},
+  {id:'PT-02', type:'PT', date:'2026-06-05', dateLabel:'5–7 Jun 2026', subjects: subj(
+    ['Electrostatic Potential and Capacitance'],
+    ['Electrochemistry'],
+    ['Sexual Reproduction in Flowering Plants (contd.) — fertilization to polyembryony'],
+    ['Human Reproduction-II']
+  )},
+  {id:'TE-01', type:'TE', date:'2026-06-17', dateLabel:'17,20,21 Jun 2026', subjects: subj(
+    ['Electric Charges & Fields','Electrostatic Potential and Capacitance'],
+    ['Solutions','Electrochemistry'],
+    ['Sexual Reproduction in Flowering Plants'],
+    ['Human Reproduction']
+  )},
+  {id:'NRT-01', type:'NRT', date:'2026-07-12', dateLabel:'Opens 12 Jul 2026', subjects: subj(
+    ['Electric Charges and Fields','Electrostatic Potential and Capacitance'],
+    ['Solutions','Electrochemistry'],
+    ['Sexual Reproduction in Flowering Plants'],
+    ['Human Reproduction']
+  )},
+  {id:'AIATS-01', type:'AIATS', date:'2026-07-19', dateLabel:'19 Jul 2026', subjects: subj(
+    ['Electric Charges and Fields','Electrostatic Potential and Capacitance'],
+    ['Solutions','Electrochemistry'],
+    ['Sexual Reproduction in Flowering Plants'],
+    ['Human Reproduction']
+  )},
+  {id:'TE-02', type:'TE', date:'2026-07-29', dateLabel:'29 Jul, 1–2 Aug 2026', subjects: subj(
+    ['Current Electricity','Moving Charges and Magnetism','Magnetism and Matter'],
+    ['Chemical Kinetics','The d- & f-Block Elements'],
+    ['Principles of Inheritance & Variation'],
+    ['Reproductive Health']
+  )},
+  {id:'TE-03', type:'TE', date:'2026-09-02', dateLabel:'2,5,6 Sep 2026', subjects: subj(
+    ['Electromagnetic Induction','Alternating Current','Electromagnetic Waves'],
+    ['Coordination Compounds','Haloalkanes and Haloarenes'],
+    ['Molecular Basis of Inheritance'],
+    ['Evolution']
+  )},
+  {id:'NRT-02', type:'NRT', date:'2026-09-27', dateLabel:'Opens 27 Sep 2026', subjects: subj(
+    ['Current Electricity','Moving Charges and Magnetism','Magnetism and Matter','Electromagnetic Induction'],
+    ['Chemical Kinetics','The d- & f-Block Elements','Coordination Compounds'],
+    ['Principles of Inheritance and Variation','Molecular Basis of Inheritance'],
+    ['Reproductive Health','Evolution']
+  )},
+  {id:'AIATS-02', type:'AIATS', date:'2026-10-04', dateLabel:'4 Oct 2026', subjects: subj(
+    ['Current Electricity','Moving Charges and Magnetism','Magnetism and Matter','Electromagnetic Induction'],
+    ['Chemical Kinetics','The d- & f-Block Elements','Coordination Compounds'],
+    ['Principles of Inheritance and Variation','Molecular Basis of Inheritance'],
+    ['Reproductive Health','Evolution']
+  )},
+  {id:'TE-04', type:'TE', date:'2026-10-21', dateLabel:'21,24,25 Oct 2026', subjects: subj(
+    ['Ray Optics & Optical Instruments','Wave Optics','Dual Nature of Radiation and Matter'],
+    ['Alcohols, Phenols and Ethers','Aldehydes, Ketones and Carboxylic Acids'],
+    ['Microbes in Human Welfare','Organisms and Populations'],
+    ['Human Health & Disease']
+  )},
+  {id:'NRT-03', type:'NRT', date:'2026-11-15', dateLabel:'Opens 15 Nov 2026', subjects: subj(
+    ['Alternating Current','Electromagnetic Wave','Ray Optics & Optical Instruments','Wave Optics'],
+    ['Haloalkanes and Haloarenes','Alcohols, Phenols and Ethers','Aldehydes, Ketones and Carboxylic Acids'],
+    ['Microbes in Human Welfare','Organisms and Populations'],
+    ['Human Health & Disease']
+  )},
+  {id:'AIATS-03', type:'AIATS', date:'2026-11-22', dateLabel:'22 Nov 2026', subjects: subj(
+    ['Alternating Current','Electromagnetic Wave','Ray Optics & Optical Instruments','Wave Optics'],
+    ['Haloalkanes and Haloarenes','Alcohols, Phenols and Ethers','Aldehydes, Ketones and Carboxylic Acids'],
+    ['Microbes in Human Welfare','Organisms and Populations'],
+    ['Human Health & Disease']
+  )},
+  {id:'TE-05', type:'TE', date:'2026-11-25', dateLabel:'25,28,29 Nov 2026', subjects: subj(
+    ['Atoms','Nuclei','Semiconductor Electronics','Experimental Skills'],
+    ['Amines','Biomolecules','The p-Block Elements (Group 15–18)','Principles Related to Practical Chemistry'],
+    ['Ecosystem','Biodiversity and Conservation'],
+    ['Biotechnology — Principles and Processes','Biotechnology and Its Applications']
+  )},
+  {id:'NRT-04', type:'NRT', date:'2026-12-06', dateLabel:'Opens 6 Dec 2026', subjects: subj(
+    ['Units & Measurements','Motion in a Straight Line','Motion in a Plane'],
+    ['Some Basic Concepts of Chemistry','Structure of Atom','Classification of Elements and Periodicity in Properties','Chemical Bonding and Molecular Structure'],
+    ['Cell: The Unit of Life','Cell Cycle & Cell Division','The Living World'],
+    ['Structural Organisation in Animals (Animal Tissues)','Biomolecules']
+  )},
+  {id:'AIATS-04', type:'AIATS', date:'2026-12-13', dateLabel:'13 Dec 2026', subjects: subj(
+    ['Units & Measurements','Motion in a Straight Line','Motion in a Plane'],
+    ['Some Basic Concepts of Chemistry','Structure of Atom','Classification of Elements and Periodicity in Properties','Chemical Bonding and Molecular Structure'],
+    ['Cell: The Unit of Life','Cell Cycle & Cell Division','The Living World'],
+    ['Structural Organisation in Animals (Animal Tissues)','Biomolecules']
+  )},
+  {id:'NRT-05', type:'NRT', date:'2026-12-20', dateLabel:'Opens 20 Dec 2026', subjects: subj(
+    ['Laws of Motion','Work, Energy and Power','System of Particles & Rotational Motion'],
+    ['Thermodynamics','Equilibrium'],
+    ['Biological Classification','Morphology of Flowering Plants'],
+    ['Breathing & Exchange of Gases','Body Fluids and Circulation','Excretory Products and Their Elimination']
+  )},
+  {id:'AIATS-05', type:'AIATS', date:'2026-12-27', dateLabel:'27 Dec 2026', subjects: subj(
+    ['Laws of Motion','Work, Energy and Power','System of Particles & Rotational Motion'],
+    ['Thermodynamics','Equilibrium'],
+    ['Biological Classification','Morphology of Flowering Plants'],
+    ['Breathing & Exchange of Gases','Body Fluids and Circulation','Excretory Products and Their Elimination']
+  )},
+  {id:'NRT-06', type:'NRT', date:'2027-01-03', dateLabel:'Opens 3 Jan 2027', subjects: subj(
+    ['Gravitation','Mechanical Properties of Solids','Mechanical Properties of Fluids','Thermal Properties of Matter'],
+    ['Redox Reactions','Some p-Block Elements (Group 13 & 14)','Equilibrium'],
+    ['Anatomy of Flowering Plants','Plant Kingdom'],
+    ['Locomotion and Movement','Neural Control and Coordination','Chemical Coordination and Integration']
+  )},
+  {id:'AIATS-06', type:'AIATS', date:'2027-01-10', dateLabel:'10 Jan 2027', subjects: subj(
+    ['Gravitation','Mechanical Properties of Solids','Mechanical Properties of Fluids','Thermal Properties of Matter'],
+    ['Redox Reactions','Some p-Block Elements (Group 13 & 14)','Equilibrium'],
+    ['Anatomy of Flowering Plants','Plant Kingdom'],
+    ['Locomotion and Movement','Neural Control and Coordination','Chemical Coordination and Integration']
+  )},
+  {id:'NRT-07', type:'NRT', date:'2027-01-17', dateLabel:'Opens 17 Jan 2027', subjects: subj(
+    ['Thermodynamics','Kinetic Theory','Oscillations and Waves'],
+    ['Organic Chemistry: Basic Principles & Techniques','Hydrocarbons'],
+    ['Photosynthesis in Higher Plants','Respiration in Plants','Plant Growth and Development'],
+    ['Animal Kingdom & Structural Organisation — Cockroach & Frog']
+  )},
+  {id:'AIATS-07', type:'AIATS', date:'2027-01-24', dateLabel:'24 Jan 2027', subjects: subj(
+    ['Thermodynamics','Kinetic Theory','Oscillations and Waves'],
+    ['Organic Chemistry: Basic Principles & Techniques','Hydrocarbons'],
+    ['Photosynthesis in Higher Plants','Respiration in Plants','Plant Growth and Development'],
+    ['Animal Kingdom & Structural Organisation — Cockroach & Frog']
+  )},
+  {id:'NRT-08', type:'NRT', date:'2027-01-31', dateLabel:'Opens 31 Jan 2027', subjects: subj(
+    ['Dual Nature of Radiation and Matter','Atoms','Nuclei','Semiconductors','Experimental Skills'],
+    ['Amines','Biomolecules','The p-Block Elements (Group 15–18)','Principles Related to Practical Chemistry'],
+    ['Ecosystem','Biodiversity and Conservation'],
+    ['Biotechnology — Principles and Processes','Biotechnology and Its Applications']
+  )},
+  {id:'AIATS-08', type:'AIATS', date:'2027-02-07', dateLabel:'7 Feb 2027', subjects: subj(
+    ['Dual Nature of Radiation and Matter','Atoms','Nuclei','Semiconductors','Experimental Skills'],
+    ['Amines','Biomolecules','The p-Block Elements (Group 15–18)','Principles Related to Practical Chemistry'],
+    ['Ecosystem','Biodiversity and Conservation'],
+    ['Biotechnology — Principles and Processes','Biotechnology and Its Applications']
+  )},
+  {id:'AIATS-09', type:'MOCK', date:'2027-03-21', dateLabel:'21 Mar 2027', mock:true},
+  {id:'AIATS-10', type:'MOCK', date:'2027-03-28', dateLabel:'28 Mar 2027', mock:true},
+  {id:'AIATS-11', type:'MOCK', date:'2027-04-04', dateLabel:'4 Apr 2027', mock:true},
+  {id:'AIATS-12', type:'MOCK', date:'2027-04-11', dateLabel:'11 Apr 2027', mock:true},
+  {id:'AIATS-13', type:'MOCK', date:'2027-04-18', dateLabel:'18 Apr 2027', mock:true},
+  {id:'AIATS-14', type:'MOCK', date:'2027-04-25', dateLabel:'25 Apr 2027', mock:true},
+];
+
+const TYPE_LABEL = {PT:'Practice Test', TE:'Term Exam', NRT:'NCERT Revision (Online)', AIATS:'AIATS', MOCK:'Open Mock — full syllabus'};
+const SUBJ_COLOR = {Physics:'var(--physics)', Chemistry:'var(--chemistry)', Botany:'var(--botany)', Zoology:'var(--zoology)'};
+
+// ---- State --------------------------------------------------------------
+let progress = {};
+let mockDone = {};
+let activeFilter = 'ALL';
+let hidePast = false;
+
+function daysBetween(a,b){ return Math.round((b-a)/86400000); }
+
+function topicId(testId, subject, idx){ return testId+'::'+subject+'::'+idx; }
+
+async function loadProgress(){
+  try{
+    const r = await window.storage.get('topic-progress');
+    progress = r && r.value ? JSON.parse(r.value) : {};
+  }catch(e){ progress = {}; }
+  try{
+    const r2 = await window.storage.get('mock-attempted');
+    mockDone = r2 && r2.value ? JSON.parse(r2.value) : {};
+  }catch(e){ mockDone = {}; }
+}
+async function saveProgress(){
+  try{ await window.storage.set('topic-progress', JSON.stringify(progress)); }catch(e){}
+}
+async function saveMock(){
+  try{ await window.storage.set('mock-attempted', JSON.stringify(mockDone)); }catch(e){}
+}
+
+function totalTopics(){
+  let n=0;
+  tests.forEach(t=>{ if(!t.mock){ Object.values(t.subjects).forEach(arr=>n+=arr.length); } });
+  return n;
+}
+function doneTopics(){
+  return Object.values(progress).filter(Boolean).length;
+}
+
+function render(){
+  // stats
+  const total = totalTopics();
+  const done = doneTopics();
+  document.getElementById('statDone').textContent = done+' / '+total;
+  document.getElementById('progressFill').style.width = (total? (done/total*100):0)+'%';
+
+  const upcoming = tests.filter(t=> new Date(t.date) >= TODAY || daysBetween(new Date(t.date), TODAY) <= 2 ).filter(t=>daysBetween(TODAY,new Date(t.date))>=-3);
+  const future = tests.filter(t=>new Date(t.date) >= TODAY);
+  const nextTest = future.sort((a,b)=>new Date(a.date)-new Date(b.date))[0];
+  document.getElementById('statNext').textContent = nextTest ? nextTest.id : '—';
+  document.getElementById('statNextLbl').textContent = nextTest ? ('IN '+daysBetween(TODAY,new Date(nextTest.date))+' DAYS') : 'NO TESTS LEFT';
+  document.getElementById('statRemaining').textContent = future.length;
+
+  // filters
+  const types = ['ALL','PT','TE','NRT','AIATS','MOCK'];
+  const filterBar = document.getElementById('filters');
+  filterBar.innerHTML = '';
+  types.forEach(ty=>{
+    const b = document.createElement('button');
+    b.className = 'chip'+(activeFilter===ty?' active':'');
+    b.textContent = ty==='ALL' ? 'All tests' : (ty==='MOCK'?'Open Mock':ty);
+    b.onclick = ()=>{ activeFilter=ty; render(); };
+    filterBar.appendChild(b);
+  });
+
+  const toggleEl = document.getElementById('upcomingToggle');
+  toggleEl.className = 'toggle'+(hidePast?' on':'');
+  toggleEl.onclick = ()=>{ hidePast=!hidePast; render(); };
+  document.getElementById('upcomingLabel').textContent = hidePast ? 'Showing upcoming tests only' : 'Show all tests (including ones already past)';
+
+  // timeline
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = '';
+  let list = tests.filter(t=> activeFilter==='ALL' || t.type===activeFilter);
+  if(hidePast){ list = list.filter(t=> new Date(t.date) >= TODAY); }
+
+  if(list.length===0){
+    tl.innerHTML = '<div class="empty">No tests match this filter.</div>';
+    return;
+  }
+
+  list.forEach(t=>{
+    const d = new Date(t.date);
+    const diff = daysBetween(TODAY, d);
+    const isPast = diff < 0;
+    const isNext = nextTest && t.id===nextTest.id;
+
+    const node = document.createElement('div');
+    node.className = 'node'+(isPast?' done':'')+(isNext?' next':'');
+
+    const dot = document.createElement('div');
+    dot.className='dot';
+    node.appendChild(dot);
+
+    const card = document.createElement('div');
+    card.className='card';
+
+    let subjTotal=0, subjDone=0;
+    if(!t.mock){
+      Object.entries(t.subjects).forEach(([s,arr])=>{
+        arr.forEach((_,i)=>{ subjTotal++; if(progress[topicId(t.id,s,i)]) subjDone++; });
+      });
+    }
+
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="card-id-row">
+          <span class="test-id">${t.id}</span>
+          <span class="test-tag">${TYPE_LABEL[t.type]}</span>
+          ${isNext?'<span class="next-badge">NEXT UP</span>':''}
+        </div>
+        <div class="date-block">
+          <div class="date-txt">${t.dateLabel}</div>
+          <div class="days-txt">${isPast? Math.abs(diff)+' days ago' : (diff===0?'today':'in '+diff+' days')}</div>
+        </div>
+      </div>
+      ${t.mock ? '' : `
+      <div class="mini-progress">
+        <div class="mini-track"><div class="mini-fill" style="width:${subjTotal?(subjDone/subjTotal*100):0}%"></div></div>
+        <div class="mini-count">${subjDone}/${subjTotal} chapters</div>
+      </div>`}
+    `;
+
+    if(t.mock){
+      const note = document.createElement('div');
+      note.className='mock-note';
+      note.innerHTML = `<span>Full-syllabus mock — revise everything covered so far.</span>
+        <label><input type="checkbox" ${mockDone[t.id]?'checked':''}> Mark attempted</label>`;
+      note.querySelector('input').addEventListener('change', async (e)=>{
+        mockDone[t.id] = e.target.checked;
+        await saveMock();
+      });
+      card.appendChild(note);
+    } else {
+      const subjWrap = document.createElement('div');
+      subjWrap.className='subjects';
+      Object.entries(t.subjects).forEach(([s,arr])=>{
+        const col = document.createElement('div');
+        col.className='subj';
+        col.style.borderLeftColor = SUBJ_COLOR[s];
+        const head = document.createElement('div');
+        head.className='subj-head';
+        head.innerHTML = `<span class="subj-dot" style="background:${SUBJ_COLOR[s]}"></span><span class="subj-name">${s}</span>`;
+        col.appendChild(head);
+        arr.forEach((topic,i)=>{
+          const id = topicId(t.id,s,i);
+          const row = document.createElement('label');
+          row.className='topic'+(progress[id]?' checked':'');
+          row.innerHTML = `<input type="checkbox" ${progress[id]?'checked':''}><span>${topic}</span>`;
+          row.querySelector('input').addEventListener('change', async (e)=>{
+            progress[id] = e.target.checked;
+            row.classList.toggle('checked', e.target.checked);
+            await saveProgress();
+            render();
+          });
+          col.appendChild(row);
+        });
+        subjWrap.appendChild(col);
+      });
+      card.appendChild(subjWrap);
+    }
+
+    node.appendChild(card);
+    tl.appendChild(node);
+  });
+}
+
+(async function init(){
+  await loadProgress();
+  render();
+})();
+</script>
+</body>
+</html>
