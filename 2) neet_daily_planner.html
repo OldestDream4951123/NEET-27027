@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEET 2027 · Daily Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E14; --surface:#111826; --surface-2:#161F30; --border:#212B3B;
+    --text:#E8ECF3; --muted:#7C8797; --muted-2:#576073;
+    --physics:#5B8CFF; --chemistry:#3ED9C4; --botany:#7FD858; --zoology:#FF9A62;
+    --amber:#F2B84B; --red:#FF6B6B; --purple:#B18CFF; --done:#3A4658;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  ::selection{background:rgba(242,184,75,0.25);}
+  .wrap{max-width:920px;margin:0 auto;padding:24px 16px 90px;}
+
+  .hero{position:relative;padding-bottom:18px;margin-bottom:6px;border-bottom:1px solid var(--border);}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:10px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:28px;letter-spacing:-0.01em;margin:0 0 6px;}
+  .sub{color:var(--muted);font-size:13.5px;margin:0 0 20px;line-height:1.5;}
+
+  .stat-row{display:flex;gap:12px;flex-wrap:wrap;}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 15px;flex:1;min-width:120px;}
+  .stat .num{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:20px;line-height:1;}
+  .stat .lbl{color:var(--muted);font-size:10.5px;margin-top:6px;letter-spacing:.02em;}
+  .stat.streak .num{color:var(--amber);}
+  .progress-track{margin-top:14px;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--physics),var(--botany));border-radius:99px;transition:width .4s ease;}
+
+  /* Tabs */
+  .tabs{display:flex;gap:6px;margin:22px 0 18px;border-bottom:1px solid var(--border);}
+  .tab{font-family:'JetBrains Mono',monospace;font-size:12.5px;padding:9px 4px;margin-right:18px;background:none;border:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;letter-spacing:.03em;}
+  .tab.active{color:var(--text);border-bottom-color:var(--amber);}
+
+  /* Day nav */
+  .daynav{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .navbtn{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .navbtn:hover{border-color:var(--muted-2);}
+  .daydate{flex:1;text-align:center;}
+  .daydate .dow{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
+  .daydate .full{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;}
+  .todaybtn{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--surface-2);border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:8px 10px;cursor:pointer;}
+  .todaybtn:hover{color:var(--text);}
+  .datepick{background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:7px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;}
+
+  .banner{border-radius:10px;padding:12px 14px;font-size:12.5px;margin-bottom:14px;line-height:1.5;border:1px solid;}
+  .banner.warn{background:rgba(242,184,75,0.08);border-color:rgba(242,184,75,0.3);color:#F2B84B;}
+  .banner.info{background:rgba(91,140,255,0.08);border-color:rgba(91,140,255,0.28);color:#9DB6FF;}
+  .banner.empty{background:var(--surface);border-color:var(--border);color:var(--muted);text-align:center;padding:30px 14px;}
+
+  .section-title{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px;display:flex;align-items:center;gap:8px;}
+  .section-title .cnt{background:var(--surface-2);padding:1px 7px;border-radius:99px;font-size:10px;}
+
+  .task{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:7px;cursor:pointer;}
+  .task:hover{border-color:var(--muted-2);}
+  .task input{margin-top:2px;width:16px;height:16px;accent-color:var(--amber);cursor:pointer;flex-shrink:0;}
+  .task.done{opacity:.5;}
+  .task.done .t-label{text-decoration:line-through;text-decoration-color:var(--muted-2);}
+  .t-body{flex:1;min-width:0;}
+  .t-tags{display:flex;gap:6px;align-items:center;margin-bottom:3px;flex-wrap:wrap;}
+  .t-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  .t-subj{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  .t-type{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.05em;padding:1px 6px;border-radius:5px;text-transform:uppercase;}
+  .t-type.new{background:rgba(91,140,255,0.15);color:var(--physics);}
+  .t-type.revise{background:rgba(126,216,88,0.13);color:var(--botany);}
+  .t-type.mock{background:rgba(242,184,75,0.15);color:var(--amber);}
+  .t-type.qs{background:rgba(62,217,196,0.15);color:var(--chemistry);}
+  .t-type.fullmock{background:rgba(255,107,107,0.15);color:var(--red);}
+  .t-type.biorev{background:rgba(127,216,88,0.13);color:var(--botany);}
+  .t-cls{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted-2);border:1px solid var(--border);border-radius:5px;padding:1px 5px;}
+  .t-label{font-size:13.5px;line-height:1.4;color:var(--text);}
+
+  .chip-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
+  .review-chip{display:flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:5px 11px 5px 8px;font-size:11.5px;cursor:pointer;color:var(--muted);}
+  .review-chip:hover{border-color:var(--purple);}
+  .review-chip input{width:12px;height:12px;accent-color:var(--purple);cursor:pointer;}
+  .review-chip.done{opacity:.45;text-decoration:line-through;}
+  .review-chip .rlbl{color:var(--text);}
+
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;}
+  .chip{font-family:'JetBrains Mono',monospace;font-size:11.5px;padding:6px 12px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;}
+  .chip:hover{color:var(--text);border-color:var(--muted-2);}
+  .chip.active{background:var(--surface-2);color:var(--text);border-color:var(--muted-2);}
+
+  .info-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-top:26px;}
+  .info-box summary{cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14.5px;list-style:none;display:flex;align-items:center;justify-content:space-between;}
+  .info-box summary::-webkit-details-marker{display:none;}
+  .info-box summary .arrow{font-size:12px;color:var(--muted);transition:transform .15s ease;}
+  .info-box[open] summary .arrow{transform:rotate(90deg);}
+  .info-box .body{margin-top:14px;font-size:13px;color:var(--muted);line-height:1.65;}
+  .info-box .body b{color:var(--text);}
+  .info-box .body ul{margin:8px 0;padding-left:18px;}
+  .info-box .body li{margin-bottom:6px;}
+
+  /* Test calendar tab */
+  .test-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+  .test-card.past{opacity:.5;}
+  .test-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
+  .test-id{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14.5px;}
+  .test-tag{font-family:'JetBrains Mono',monospace;font-size:9.5px;padding:2px 7px;border-radius:5px;background:var(--surface-2);color:var(--muted);text-transform:uppercase;margin-left:8px;}
+  .test-date{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-align:right;}
+  .test-due{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--amber);margin-top:6px;}
+  .test-chapters{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6;}
+  .test-chapters b{color:var(--text);font-weight:500;}
+
+  .catchup-subject{margin-bottom:22px;}
+  .catchup-bulk{display:flex;gap:8px;margin-bottom:10px;}
+  .catchup-bulk select{flex:1;min-width:0;}
+  .empty{text-align:center;color:var(--muted);padding:50px 20px;font-size:13px;}
+  footer{text-align:center;color:var(--muted-2);font-size:11px;margin-top:36px;font-family:'JetBrains Mono',monospace;line-height:1.7;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Phase-01 (CF + OYM) · 2026–2027 · Type-2 (B / D / F)</div>
+    <h1>NEET Daily Planner</h1>
+    <p class="sub">What to study <b style="color:var(--text)">today</b> — back-planned from your Aakash test dates, broken into bite-sized topics, with spaced revision built in. Check things off as you go; everything is saved automatically.</p>
+    <div class="stat-row">
+      <div class="stat"><div class="num" id="statProgress">0%</div><div class="lbl">SYLLABUS DONE</div></div>
+      <div class="stat streak"><div class="num" id="statStreak">0</div><div class="lbl">DAY STREAK</div></div>
+      <div class="stat"><div class="num" id="statNext">—</div><div class="lbl" id="statNextLbl">NEXT TEST</div></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="today">Today's Plan</button>
+    <button class="tab" data-tab="tests">Test Calendar</button>
+    <button class="tab" data-tab="catchup">Catch-up</button>
+  </div>
+
+  <div id="tab-today">
+    <div class="daynav">
+      <button class="navbtn" id="prevDay">‹</button>
+      <div class="daydate"><div class="dow" id="dayDow">—</div><div class="full" id="dayFull">—</div></div>
+      <button class="navbtn" id="nextDay">›</button>
+      <button class="todaybtn" id="jumpToday">Today</button>
+      <input type="date" class="datepick" id="datePick">
+    </div>
+
+    <div id="dayBanner"></div>
+    <div id="dayContent"></div>
+
+    <details class="info-box" id="whyBox">
+      <summary>Why this plan is built this way <span class="arrow">▸</span></summary>
+      <div class="body">
+        <ul>
+          <li><b>Backward planning from test dates</b> — Practice Tests, Term Exams &amp; NRTs: topics finish 4 days before the test, then a self mock-test slot before you sit it. AIATS: everything is fully re-revised at least 10 days out, with <b>2 mock tests</b> and <b>~200 practice questions per chapter</b> worked into the days before.</li>
+          <li><b>Chapters broken into 3–7 topics</b> — every Physics &amp; Chemistry chapter is split into digestible sub-topics so no single day means "read a whole chapter."</li>
+          <li><b>Gentle, adapting load</b> — the planner starts light and ramps up over the first few weeks, then auto-balances daily load against however much time is actually left before the exam it's prepping for.</li>
+          <li><b>Class 11 gets first claim on free days</b> — whenever there's spare capacity (no near-term test topic due), the plan pulls in Class 11 chapters early, so the full 11th syllabus is wrapped up well before the AIATS-09 all-syllabus mocks begin (21 Mar 2027) — not crammed at the end.</li>
+          <li><b>Priority order for free-day filling</b> — when there's spare room, GOC &amp; Hydrocarbons go first, then Equilibrium / Thermodynamics (Chem) and all of Class 11 Physics, then the rest of Class 11, then a light Bio revision pass — before anything else gets pulled forward early.</li>
+          <li><b>Bio revision, on a cycle</b> — once a Botany/Zoology chapter is marked done, it quietly resurfaces roughly every ~25 days as optional filler (only on days with room to spare) to help keep Biology accuracy high through NEET.</li>
+          <li><b>Spaced repetition</b> — once you check a topic off, light "quick revise" reminders resurface it at 1, 3, 7, 16 and 35 days later (the classic Ebbinghaus forgetting-curve spacing), rather than reading something once and never touching it again.</li>
+          <li><b>Active recall over re-reading</b> — mock tests and per-chapter question practice are built into the plan itself, because testing yourself sticks better than re-reading notes.</li>
+          <li><b>Interleaving</b> — each day mixes subjects (Physics/Chemistry/Botany/Zoology) rather than one giant single-subject block, which research on interleaved practice shows improves retention over "blocked" study.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div id="tab-tests" style="display:none;">
+    <div class="filters" id="testFilters"></div>
+    <div id="testList"></div>
+  </div>
+
+  <div id="tab-catchup" style="display:none;">
+    <div class="banner info">Already studied some of this before you started using the planner? Set your real starting point here so the plan stops asking you to (re)do things you've already covered. This only marks the <i>first-time learning</i> task for each chapter as done — future revision passes before later tests still show up normally.</div>
+    <div id="catchupBody"></div>
+  </div>
+
+  <footer>Aakash Test Planner · Carry Forward &amp; One Year Medical · Batch window 17 Mar – 1 Apr 2026<br>Adaptive daily plan recomputed each time you open this page — anything left undone rolls forward.</footer>
+</div>
+
+<script>
+// ============================================================================
+// DATA
+// ============================================================================
+function subj(p,c,b,z){ return {Physics:p, Chemistry:c, Botany:b, Zoology:z}; }
+const TESTS = [
+  {id:'PT-01', type:'PT', date:'2026-05-08', dateLabel:'8–10 May 2026', subjects: subj(
+    ['Electric Charges & Fields'],['Solutions'],
+    ['Sexual Reproduction in Flowering Plants — intro to pollination'],['Human Reproduction-I'])},
+  {id:'PT-02', type:'PT', date:'2026-06-05', dateLabel:'5–7 Jun 2026', subjects: subj(
+    ['Electrostatic Potential and Capacitance'],['Electrochemistry'],
+    ['Sexual Reproduction in Flowering Plants (contd.) — fertilization to polyembryony'],['Human Reproduction-II'])},
+  {id:'TE-01', type:'TE', date:'2026-06-17', dateLabel:'17,20,21 Jun 2026', subjects: subj(
+    ['Electric Charges & Fields','Electrostatic Potential and Capacitance'],['Solutions','Electrochemistry'],
+    ['Sexual Reproduction in Flowering Plants'],['Human Reproduction'])},
+  {id:'NRT-01', type:'NRT', date:'2026-07-12', dateLabel:'Opens 12 Jul 2026', subjects: subj(
+    ['Electric Charges and Fields','Electrostatic Potential and Capacitance'],['Solutions','Electrochemistry'],
+    ['Sexual Reproduction in Flowering Plants'],['Human Reproduction'])},
+  {id:'AIATS-01', type:'AIATS', date:'2026-07-19', dateLabel:'19 Jul 2026', subjects: subj(
+    ['Electric Charges and Fields','Electrostatic Potential and Capacitance'],['Solutions','Electrochemistry'],
+    ['Sexual Reproduction in Flowering Plants'],['Human Reproduction'])},
+  {id:'TE-02', type:'TE', date:'2026-07-29', dateLabel:'29 Jul, 1–2 Aug 2026', subjects: subj(
+    ['Current Electricity','Moving Charges and Magnetism','Magnetism and Matter'],['Chemical Kinetics','The d- & f-Block Elements'],
+    ['Principles of Inheritance & Variation'],['Reproductive Health'])},
+  {id:'TE-03', type:'TE', date:'2026-09-02', dateLabel:'2,5,6 Sep 2026', subjects: subj(
+    ['Electromagnetic Induction','Alternating Current','Electromagnetic Waves'],['Coordination Compounds','Haloalkanes and Haloarenes'],
+    ['Molecular Basis of Inheritance'],['Evolution'])},
+  {id:'NRT-02', type:'NRT', date:'2026-09-27', dateLabel:'Opens 27 Sep 2026', subjects: subj(
+    ['Current Electricity','Moving Charges and Magnetism','Magnetism and Matter','Electromagnetic Induction'],
+    ['Chemical Kinetics','The d- & f-Block Elements','Coordination Compounds'],
+    ['Principles of Inheritance and Variation','Molecular Basis of Inheritance'],['Reproductive Health','Evolution'])},
+  {id:'AIATS-02', type:'AIATS', date:'2026-10-04', dateLabel:'4 Oct 2026', subjects: subj(
+    ['Current Electricity','Moving Charges and Magnetism','Magnetism and Matter','Electromagnetic Induction'],
+    ['Chemical Kinetics','The d- & f-Block Elements','Coordination Compounds'],
+    ['Principles of Inheritance and Variation','Molecular Basis of Inheritance'],['Reproductive Health','Evolution'])},
+  {id:'TE-04', type:'TE', date:'2026-10-21', dateLabel:'21,24,25 Oct 2026', subjects: subj(
+    ['Ray Optics & Optical Instruments','Wave Optics','Dual Nature of Radiation and Matter'],
+    ['Alcohols, Phenols and Ethers','Aldehydes, Ketones and Carboxylic Acids'],
+    ['Microbes in Human Welfare','Organisms and Populations'],['Human Health & Disease'])},
+  {id:'NRT-03', type:'NRT', date:'2026-11-15', dateLabel:'Opens 15 Nov 2026', subjects: subj(
+    ['Alternating Current','Electromagnetic Wave','Ray Optics & Optical Instruments','Wave Optics'],
+    ['Haloalkanes and Haloarenes','Alcohols, Phenols and Ethers','Aldehydes, Ketones and Carboxylic Acids'],
+    ['Microbes in Human Welfare','Organisms and Populations'],['Human Health & Disease'])},
+  {id:'AIATS-03', type:'AIATS', date:'2026-11-22', dateLabel:'22 Nov 2026', subjects: subj(
+    ['Alternating Current','Electromagnetic Wave','Ray Optics & Optical Instruments','Wave Optics'],
+    ['Haloalkanes and Haloarenes','Alcohols, Phenols and Ethers','Aldehydes, Ketones and Carboxylic Acids'],
+    ['Microbes in Human Welfare','Organisms and Populations'],['Human Health & Disease'])},
+  {id:'TE-05', type:'TE', date:'2026-11-25', dateLabel:'25,28,29 Nov 2026', subjects: subj(
+    ['Atoms','Nuclei','Semiconductor Electronics','Experimental Skills'],
+    ['Amines','Biomolecules','The p-Block Elements (Group 15–18)','Principles Related to Practical Chemistry'],
+    ['Ecosystem','Biodiversity and Conservation'],
+    ['Biotechnology — Principles and Processes','Biotechnology and Its Applications'])},
+  {id:'NRT-04', type:'NRT', date:'2026-12-06', dateLabel:'Opens 6 Dec 2026', subjects: subj(
+    ['Units & Measurements','Motion in a Straight Line','Motion in a Plane'],
+    ['Some Basic Concepts of Chemistry','Structure of Atom','Classification of Elements and Periodicity in Properties','Chemical Bonding and Molecular Structure'],
+    ['Cell: The Unit of Life','Cell Cycle & Cell Division','The Living World'],
+    ['Structural Organisation in Animals (Animal Tissues)','Biomolecules'])},
+  {id:'AIATS-04', type:'AIATS', date:'2026-12-13', dateLabel:'13 Dec 2026', subjects: subj(
+    ['Units & Measurements','Motion in a Straight Line','Motion in a Plane'],
+    ['Some Basic Concepts of Chemistry','Structure of Atom','Classification of Elements and Periodicity in Properties','Chemical Bonding and Molecular Structure'],
+    ['Cell: The Unit of Life','Cell Cycle & Cell Division','The Living World'],
+    ['Structural Organisation in Animals (Animal Tissues)','Biomolecules'])},
+  {id:'NRT-05', type:'NRT', date:'2026-12-20', dateLabel:'Opens 20 Dec 2026', subjects: subj(
+    ['Laws of Motion','Work, Energy and Power','System of Particles & Rotational Motion'],
+    ['Thermodynamics','Equilibrium'],
+    ['Biological Classification','Morphology of Flowering Plants'],
+    ['Breathing & Exchange of Gases','Body Fluids and Circulation','Excretory Products and Their Elimination'])},
+  {id:'AIATS-05', type:'AIATS', date:'2026-12-27', dateLabel:'27 Dec 2026', subjects: subj(
+    ['Laws of Motion','Work, Energy and Power','System of Particles & Rotational Motion'],
+    ['Thermodynamics','Equilibrium'],
+    ['Biological Classification','Morphology of Flowering Plants'],
+    ['Breathing & Exchange of Gases','Body Fluids and Circulation','Excretory Products and Their Elimination'])},
+  {id:'NRT-06', type:'NRT', date:'2027-01-03', dateLabel:'Opens 3 Jan 2027', subjects: subj(
+    ['Gravitation','Mechanical Properties of Solids','Mechanical Properties of Fluids','Thermal Properties of Matter'],
+    ['Redox Reactions','Some p-Block Elements (Group 13 & 14)','Equilibrium'],
+    ['Anatomy of Flowering Plants','Plant Kingdom'],
+    ['Locomotion and Movement','Neural Control and Coordination','Chemical Coordination and Integration'])},
+  {id:'AIATS-06', type:'AIATS', date:'2027-01-10', dateLabel:'10 Jan 2027', subjects: subj(
+    ['Gravitation','Mechanical Properties of Solids','Mechanical Properties of Fluids','Thermal Properties of Matter'],
+    ['Redox Reactions','Some p-Block Elements (Group 13 & 14)','Equilibrium'],
+    ['Anatomy of Flowering Plants','Plant Kingdom'],
+    ['Locomotion and Movement','Neural Control and Coordination','Chemical Coordination and Integration'])},
+  {id:'NRT-07', type:'NRT', date:'2027-01-17', dateLabel:'Opens 17 Jan 2027', subjects: subj(
+    ['Thermodynamics','Kinetic Theory','Oscillations and Waves'],
+    ['Organic Chemistry: Basic Principles & Techniques','Hydrocarbons'],
+    ['Photosynthesis in Higher Plants','Respiration in Plants','Plant Growth and Development'],
+    ['Animal Kingdom & Structural Organisation — Cockroach & Frog'])},
+  {id:'AIATS-07', type:'AIATS', date:'2027-01-24', dateLabel:'24 Jan 2027', subjects: subj(
+    ['Thermodynamics','Kinetic Theory','Oscillations and Waves'],
+    ['Organic Chemistry: Basic Principles & Techniques','Hydrocarbons'],
+    ['Photosynthesis in Higher Plants','Respiration in Plants','Plant Growth and Development'],
+    ['Animal Kingdom & Structural Organisation — Cockroach & Frog'])},
+  {id:'NRT-08', type:'NRT', date:'2027-01-31', dateLabel:'Opens 31 Jan 2027', subjects: subj(
+    ['Dual Nature of Radiation and Matter','Atoms','Nuclei','Semiconductors','Experimental Skills'],
+    ['Amines','Biomolecules','The p-Block Elements (Group 15–18)','Principles Related to Practical Chemistry'],
+    ['Ecosystem','Biodiversity and Conservation'],
+    ['Biotechnology — Principles and Processes','Biotechnology and Its Applications'])},
+  {id:'AIATS-08', type:'AIATS', date:'2027-02-07', dateLabel:'7 Feb 2027', subjects: subj(
+    ['Dual Nature of Radiation and Matter','Atoms','Nuclei','Semiconductors','Experimental Skills'],
+    ['Amines','Biomolecules','The p-Block Elements (Group 15–18)','Principles Related to Practical Chemistry'],
+    ['Ecosystem','Biodiversity and Conservation'],
+    ['Biotechnology — Principles and Processes','Biotechnology and Its Applications'])},
+  {id:'AIATS-09', type:'MOCK', date:'2027-03-21', dateLabel:'21 Mar 2027', mock:true},
+  {id:'AIATS-10', type:'MOCK', date:'2027-03-28', dateLabel:'28 Mar 2027', mock:true},
+  {id:'AIATS-11', type:'MOCK', date:'2027-04-04', dateLabel:'4 Apr 2027', mock:true},
+  {id:'AIATS-12', type:'MOCK', date:'2027-04-11', dateLabel:'11 Apr 2027', mock:true},
+  {id:'AIATS-13', type:'MOCK', date:'2027-04-18', dateLabel:'18 Apr 2027', mock:true},
+  {id:'AIATS-14', type:'MOCK', date:'2027-04-25', dateLabel:'25 Apr 2027', mock:true},
+];
+const TYPE_LABEL = {PT:'Practice Test', TE:'Term Exam', NRT:'NCERT Revision (Online)', AIATS:'AIATS', MOCK:'Open Mock — full syllabus'};
+const SUBJ_COLOR = {Physics:'var(--physics)', Chemistry:'var(--chemistry)', Botany:'var(--botany)', Zoology:'var(--zoology)'};
+
+const ALIAS = { 'Electric Charges and Fields':'Electric Charges & Fields', 'Electromagnetic Wave':'Electromagnetic Waves', 'Semiconductors':'Semiconductor Electronics', 'Principles of Inheritance and Variation':'Principles of Inheritance & Variation' };
+function norm(name){ return ALIAS[name] || name; }
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+
+const CLASS11_CHAPTERS = new Set([
+  'Units & Measurements','Motion in a Straight Line','Motion in a Plane','Laws of Motion',
+  'Work, Energy and Power','System of Particles & Rotational Motion','Gravitation',
+  'Mechanical Properties of Solids','Mechanical Properties of Fluids','Thermal Properties of Matter',
+  'Thermodynamics','Kinetic Theory','Oscillations and Waves',
+  'Some Basic Concepts of Chemistry','Structure of Atom','Classification of Elements and Periodicity in Properties',
+  'Chemical Bonding and Molecular Structure','Equilibrium','Redox Reactions',
+  'Some p-Block Elements (Group 13 & 14)','Organic Chemistry: Basic Principles & Techniques','Hydrocarbons',
+  'The Living World','Biological Classification','Plant Kingdom','Animal Kingdom & Structural Organisation — Cockroach & Frog',
+  'Morphology of Flowering Plants','Anatomy of Flowering Plants','Cell: The Unit of Life','Cell Cycle & Cell Division',
+  'Photosynthesis in Higher Plants','Respiration in Plants','Plant Growth and Development',
+  'Structural Organisation in Animals (Animal Tissues)','Biomolecules',
+  'Breathing & Exchange of Gases','Body Fluids and Circulation','Excretory Products and Their Elimination',
+  'Locomotion and Movement','Neural Control and Coordination','Chemical Coordination and Integration',
+]);
+function classOf(subject, chapter){ return CLASS11_CHAPTERS.has(chapter) ? 11 : 12; }
+
+const PHYSICS_TOPICS = {
+  'Electric Charges & Fields': ["Electric charge, conductors & insulators, Coulomb's law","Electric field, field lines & superposition principle","Electric dipole, torque & dipole field","Continuous charge distributions & electric flux","Gauss's law & its applications"],
+  'Electrostatic Potential and Capacitance': ["Electric potential & potential due to a point charge/dipole","Equipotential surfaces & potential energy of a charge system","Conductors, dielectrics & polarization","Capacitors & the parallel plate capacitor","Combination of capacitors & energy stored"],
+  'Current Electricity': ["Electric current, drift velocity & Ohm's law","Resistance, resistivity & temperature dependence","Combination of resistors, EMF & internal resistance","Kirchhoff's laws & circuit analysis","Wheatstone bridge, meter bridge & potentiometer"],
+  'Moving Charges and Magnetism': ["Magnetic force on a moving charge & current-carrying wire","Biot–Savart law & field due to a straight wire","Ampere's circuital law & solenoid/toroid","Force between parallel currents & torque on a current loop","Moving-coil galvanometer & conversion to ammeter/voltmeter"],
+  'Magnetism and Matter': ["Bar magnet, field lines & earth's magnetism","Magnetic dipole moment & torque in a field","Dia-, para- & ferromagnetism","Hysteresis & magnetic materials"],
+  'Electromagnetic Induction': ["Magnetic flux & Faraday's laws","Lenz's law & motional EMF","Self and mutual inductance","AC generator principle","Eddy currents & applications"],
+  'Alternating Current': ["AC voltage/current, phasors & RMS values","AC through R, L and C circuits individually","LCR series circuit & resonance","Power in AC circuits & power factor","Transformers & LC oscillations"],
+  'Electromagnetic Waves': ["Displacement current & Maxwell's equations (concept)","Characteristics of electromagnetic waves","Electromagnetic spectrum & applications"],
+  'Ray Optics & Optical Instruments': ["Reflection at spherical mirrors & mirror formula","Refraction, total internal reflection & applications","Refraction at spherical surfaces & lens formula","Lens maker's equation, power & combination of lenses","Prism & dispersion of light","Optical instruments: microscope & telescope"],
+  'Wave Optics': ["Huygens' principle & wavefronts","Interference & Young's double slit experiment","Diffraction of light","Polarization of light"],
+  'Dual Nature of Radiation and Matter': ["Electron emission & the photoelectric effect","Einstein's photoelectric equation","de Broglie wavelength & wave nature of matter","Davisson–Germer experiment"],
+  'Atoms': ["Alpha-particle scattering & Rutherford's model","Bohr model of the hydrogen atom","Atomic spectra & energy levels","de Broglie's explanation of Bohr's postulate"],
+  'Nuclei': ["Composition & size of the nucleus, mass–energy relation","Nuclear binding energy & the stability curve","Radioactivity: alpha, beta & gamma decay","Nuclear fission & fusion"],
+  'Semiconductor Electronics': ["Energy bands & classification of solids","Intrinsic & extrinsic semiconductors, p-n junction","Diode as a rectifier & special diodes","Transistors & basic transistor action","Logic gates"],
+  'Experimental Skills': ["Common apparatus, least count & error concepts","Verification experiments (Ohm's law, resistivity, etc.)","Measurement experiments (focal length, refractive index, etc.)","Graph-based experiments & error analysis"],
+  'Units & Measurements': ["Physical quantities, SI units & dimensional formulae","Dimensional analysis & its applications","Errors in measurement","Significant figures & accuracy/precision"],
+  'Motion in a Straight Line': ["Position, displacement & velocity","Uniformly accelerated motion & equations of motion","Graphical analysis of motion (x-t, v-t, a-t)","Relative velocity"],
+  'Motion in a Plane': ["Vectors: addition, subtraction & resolution","Projectile motion","Uniform circular motion","Relative velocity in two dimensions"],
+  'Laws of Motion': ["Newton's first & second laws, momentum","Newton's third law & conservation of momentum","Friction: static, kinetic & rolling","Circular motion dynamics & banking of roads","Equilibrium of concurrent forces"],
+  'Work, Energy and Power': ["Work done by constant & variable forces","Kinetic energy & the work–energy theorem","Potential energy & conservation of mechanical energy","Power & collisions (elastic/inelastic)"],
+  'System of Particles & Rotational Motion': ["Centre of mass of a system of particles","Torque, angular momentum & their conservation","Moment of inertia & the parallel/perpendicular axis theorems","Rotational kinematics & dynamics","Rolling motion"],
+  'Gravitation': ["Kepler's laws & Newton's law of gravitation","Acceleration due to gravity & its variation","Gravitational potential energy & escape velocity","Orbital velocity & satellites"],
+  'Mechanical Properties of Solids': ["Stress, strain & Hooke's law","Stress–strain curve & elastic moduli","Applications of elastic behaviour"],
+  'Mechanical Properties of Fluids': ["Pressure, Pascal's law & buoyancy","Streamline flow, Bernoulli's principle & applications","Viscosity & Stokes' law","Surface tension & capillarity"],
+  'Thermal Properties of Matter': ["Temperature, thermal expansion & calorimetry","Change of state & latent heat","Heat transfer: conduction, convection & radiation","Newton's law of cooling"],
+  'Thermodynamics_P': ["Thermal equilibrium & the zeroth law","First law of thermodynamics & specific heats","Thermodynamic processes (isothermal, adiabatic, etc.)","Second law of thermodynamics & Carnot engine"],
+  'Kinetic Theory': ["Assumptions of kinetic theory & the ideal gas equation","Kinetic interpretation of temperature & pressure","Degrees of freedom & specific heat capacity","Mean free path"],
+  'Oscillations and Waves': ["Periodic motion & simple harmonic motion (SHM)","Energy in SHM & the simple pendulum/spring systems","Wave motion & progressive waves","Superposition, standing waves & beats","Doppler effect"],
+};
+const CHEMISTRY_TOPICS = {
+  'Solutions': ["Types of solutions & concentration terms","Solubility & Henry's law","Vapour pressure & Raoult's law","Colligative properties","Abnormal molar mass & van't Hoff factor"],
+  'Electrochemistry': ["Electrochemical cells & electrode potential","Nernst equation & EMF of a cell","Conductance & Kohlrausch's law","Electrolysis & Faraday's laws","Batteries, fuel cells & corrosion"],
+  'Chemical Kinetics': ["Rate of reaction & factors affecting it","Order & molecularity, rate law","Integrated rate equations (zero & first order)","Temperature dependence: Arrhenius equation","Collision theory"],
+  'The d- & f-Block Elements': ["General characteristics of transition elements","Oxidation states & colour of transition-metal ions","Important compounds (KMnO4, K2Cr2O7)","Lanthanoids & actinoids"],
+  'Coordination Compounds': ["Werner's theory & terminology","Nomenclature of coordination compounds","Isomerism in coordination compounds","Bonding: valence bond & crystal field theory","Importance & applications"],
+  'Haloalkanes and Haloarenes': ["Nomenclature & methods of preparation","Physical properties & nature of the C–X bond","Reactions of haloalkanes (SN1/SN2)","Reactions of haloarenes","Polyhalogen compounds"],
+  'Alcohols, Phenols and Ethers': ["Nomenclature & preparation of alcohols","Properties & reactions of alcohols","Phenols: preparation, properties & reactions","Ethers: preparation & properties"],
+  'Aldehydes, Ketones and Carboxylic Acids': ["Nomenclature & preparation of aldehydes/ketones","Nucleophilic addition reactions","Named reactions of aldehydes & ketones","Carboxylic acids: preparation & acidity","Reactions of carboxylic acids"],
+  'Amines': ["Classification & nomenclature of amines","Preparation of amines","Basicity & physical properties","Chemical reactions of amines","Diazonium salts"],
+  'Biomolecules': ["Carbohydrates: classification & structure","Proteins: amino acids & structure","Enzymes & vitamins","Nucleic acids"],
+  'The p-Block Elements (Group 15–18)': ["Group 15: nitrogen family & compounds (NH3, HNO3)","Group 16: oxygen family & compounds (O3, H2SO4)","Group 17: halogens & interhalogen compounds","Group 18: noble gases"],
+  'Principles Related to Practical Chemistry': ["Qualitative salt analysis (cations/anions)","Detection of functional groups","Chromatography & purification techniques","Titrimetric experiments"],
+  'Some Basic Concepts of Chemistry': ["Mole concept & stoichiometry","Laws of chemical combination","Percentage composition & empirical formula","Concentration terms & limiting reagent"],
+  'Structure of Atom': ["Discovery of subatomic particles & atomic models","Bohr's model & the hydrogen line spectrum","Dual nature of matter & Heisenberg's uncertainty principle","Quantum numbers & shapes of orbitals","Electronic configuration & the Aufbau principle"],
+  'Classification of Elements and Periodicity in Properties': ["Modern periodic law & the long-form periodic table","Periodic trends: atomic/ionic radii","Periodic trends: ionization enthalpy & electron gain enthalpy","Electronegativity & anomalous properties"],
+  'Chemical Bonding and Molecular Structure': ["Ionic bonding & lattice enthalpy","Covalent bonding & Lewis structures","VSEPR theory & molecular shapes","Valence bond theory & hybridization","Molecular orbital theory","Hydrogen bonding"],
+  'Thermodynamics_C': ["System, surroundings & the first law of thermodynamics","Enthalpy & thermochemistry (Hess's law)","Spontaneity & entropy","Gibbs energy & criteria for equilibrium"],
+  'Equilibrium': ["Physical equilibrium & its dynamic nature","Law of chemical equilibrium & Kc/Kp","Le Chatelier's principle","Acids, bases & pH (ionic equilibrium)","Buffer solutions & solubility product"],
+  'Redox Reactions': ["Oxidation number & balancing redox reactions","Types of redox reactions","Electrode processes (link to electrochemistry)"],
+  'Some p-Block Elements (Group 13 & 14)': ["Group 13: boron family & compounds","Group 14: carbon family & compounds","Anomalous behaviour of the first element in each group"],
+  'Organic Chemistry: Basic Principles & Techniques': ["IUPAC nomenclature & isomerism","Electronic displacement effects (inductive, resonance)","Types of organic reactions & reaction intermediates","Methods of purification of organic compounds","Qualitative & quantitative analysis"],
+  'Hydrocarbons': ["Alkanes: preparation & properties","Alkenes: preparation & properties","Alkynes: preparation & properties","Aromatic hydrocarbons & benzene","Electrophilic substitution reactions"],
+};
+function getSubtopics(subject, chapter){
+  if(subject==='Physics') return (chapter==='Thermodynamics' ? PHYSICS_TOPICS['Thermodynamics_P'] : PHYSICS_TOPICS[chapter]) || [chapter];
+  if(subject==='Chemistry') return (chapter==='Thermodynamics' ? CHEMISTRY_TOPICS['Thermodynamics_C'] : CHEMISTRY_TOPICS[chapter]) || [chapter];
+  return [chapter];
+}
+
+// ============================================================================
+// SCHEDULING ENGINE
+// ============================================================================
+const DAY = 86400000;
+function toDate(s){ return new Date(s+'T00:00:00'); }
+function addDays(d,n){ return new Date(d.getTime()+n*DAY); }
+function fmt(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function midnight(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
+function leadFor(type){ return type==='AIATS' ? 10 : 4; }
+
+function isChapterMarkedDone(progress, subject, chapter){
+  const subtopics = getSubtopics(subject, chapter);
+  return subtopics.every((st,i)=>{
+    const id = 'NEW::'+subject+'::'+slug(chapter)+'::'+i;
+    return progress[id] && progress[id].done;
+  });
+}
+
+function buildTasks(today, progress){
+  progress = progress || {};
+  const tasks = [];
+  const seen = {};
+
+  TESTS.forEach(test=>{
+    const testDate = toDate(test.date);
+    const isPastTest = testDate < today;
+
+    if(test.mock){
+      if(!isPastTest){
+        tasks.push({id:'FMOCK::'+test.id, type:'full-mock', subject:null, chapter:null,
+          label:'Attempt full-syllabus mock: '+test.id, dueDate: testDate, testId:test.id, weight:3, cls:null, fixed:true});
+      }
+      return;
+    }
+
+    const lead = leadFor(test.type);
+    const idealDue = addDays(testDate, -lead);
+    const effectiveDue = (!isPastTest && idealDue < today) ? addDays(testDate, -1) : idealDue;
+    const chaptersThisTest = [];
+
+    ['Physics','Chemistry','Botany','Zoology'].forEach(subject=>{
+      (test.subjects[subject]||[]).forEach(raw=>{
+        const chapter = norm(raw);
+        chaptersThisTest.push({subject,chapter});
+        const key = subject+'::'+chapter;
+
+        if(isPastTest){
+          if(isChapterMarkedDone(progress, subject, chapter)) seen[key] = true;
+          return;
+        }
+
+        const isFirst = !seen[key];
+        seen[key] = true;
+
+        if(isFirst){
+          const cls = classOf(subject,chapter);
+          getSubtopics(subject,chapter).forEach((st,i)=>{
+            tasks.push({id:'NEW::'+subject+'::'+slug(chapter)+'::'+i, type:'new', subject, chapter, subtopic:st,
+              label: chapter+' — '+st, dueDate: effectiveDue, testId: test.id, weight:1, cls});
+          });
+        } else {
+          tasks.push({id:'REV::'+subject+'::'+slug(chapter)+'::'+test.id, type:'revise', subject, chapter, subtopic:null,
+            label: 'Revise: '+chapter, dueDate: effectiveDue, testId: test.id, weight:1, cls: classOf(subject,chapter)});
+        }
+      });
+    });
+
+    if(isPastTest) return;
+
+    tasks.push({id:'MOCK::'+test.id, type:'mock', subject:null, chapter:null,
+      label:'Self mock test — '+test.id+' topics', dueDate: addDays(testDate,-1), testId:test.id, weight:2, cls:null});
+
+    if(test.type==='AIATS'){
+      tasks.push({id:'AMOCK2::'+test.id, type:'aiats-mock2', subject:null, chapter:null,
+        label:'2nd mock test — '+test.id+' (full revision)', dueDate: addDays(testDate,-2), testId:test.id, weight:2, cls:null});
+      const uniqChapters = [...new Map(chaptersThisTest.map(c=>[c.subject+'::'+c.chapter,c])).values()];
+      const lastSafeDay = addDays(testDate,-1);
+      uniqChapters.forEach((c,i)=>{
+        const spread = Math.floor(i / Math.max(1,Math.ceil(uniqChapters.length/lead)));
+        let due = addDays(effectiveDue, spread);
+        if(due > lastSafeDay) due = lastSafeDay;
+        tasks.push({id:'AQS::'+c.subject+'::'+slug(c.chapter)+'::'+test.id, type:'aiats-qs', subject:c.subject, chapter:c.chapter,
+          label:'Practice ~200 Qs: '+c.chapter, dueDate: due, testId:test.id, weight:2, cls: classOf(c.subject,c.chapter)});
+      });
+    }
+  });
+  return tasks;
+}
+
+const LOOKAHEAD_DAYS = 70, RAMP_DAYS = 35;
+
+// Priority tiers for OPTIONAL "get ahead" filling only — never affects real deadlines.
+// 0 = GOC & Hydrocarbons, 1 = Equilibrium/Thermo(Chem) & all Class 11 Physics,
+// 2 = other Class 11 content, 3 = bio-revision filler, 4 = everything else (normal due-date order).
+function tierOf(t){
+  if(t.type==='bio-revise') return 3;
+  if(t.type==='new' || t.type==='revise'){
+    if(t.chapter==='Organic Chemistry: Basic Principles & Techniques' || t.chapter==='Hydrocarbons') return 0;
+    if(t.subject==='Chemistry' && (t.chapter==='Equilibrium' || t.chapter==='Thermodynamics')) return 1;
+    if(t.subject==='Physics' && t.cls===11) return 1;
+    if(t.cls===11) return 2;
+  }
+  return 4;
+}
+
+function schedule(pendingTasks, today, planEnd){
+  const tasks = pendingTasks.slice();
+  const n = tasks.length;
+  const done = new Array(n).fill(false);
+  // Two fill orderings: plain due-date order (guarantees baseline smoothing for everything,
+  // regardless of tier) and priority-tier order (used only for the extra "bonus" capacity below).
+  const dueOrder = tasks.map((t,i)=>i).sort((a,b)=> tasks[a].dueDate-tasks[b].dueDate || tasks[a].id.localeCompare(tasks[b].id));
+  const fillOrder = tasks.map((t,i)=>i).sort((a,b)=>{
+    const ta=tasks[a], tb=tasks[b];
+    const tierA=tierOf(ta), tierB=tierOf(tb);
+    if(tierA!==tierB) return tierA-tierB;
+    return ta.dueDate-tb.dueDate || ta.id.localeCompare(tb.id);
+  });
+  const byDay = {};
+  let d = new Date(today);
+  let remainingWeight = tasks.filter(t=>!t.optional).reduce((s,t)=>s+t.weight,0);
+  let notDoneCount = n;
+
+  while(d <= planEnd && notDoneCount > 0){
+    const key = fmt(d);
+    const daysFromToday = Math.round((d-today)/DAY);
+    const remainingDays = Math.max(1, Math.round((planEnd-d)/DAY)+1);
+    const globalPace = remainingWeight/remainingDays;
+    const HORIZON = 14;
+    let nearWeight = 0;
+    for(let i=0;i<n;i++){
+      if(done[i] || tasks[i].optional) continue;
+      const daysAhead = Math.round((tasks[i].dueDate-d)/DAY);
+      if(daysAhead>=0 && daysAhead <= HORIZON) nearWeight += tasks[i].weight;
+    }
+    const localPace = nearWeight/HORIZON;
+    const rampFactor = Math.min(1, 0.35 + 0.65*Math.min(1,daysFromToday/RAMP_DAYS));
+    const cap = Math.max(1, Math.max(globalPace,localPace)*rampFactor*1.15);
+    const priorityBonus = Math.min(3, 1 + 2*rampFactor); // extra room reserved just for pulling priority content early
+
+    let used = 0;
+    byDay[key] = byDay[key] || [];
+
+    // 1) mandatory: any NON-optional task due today or earlier — a real deadline, always honoured
+    for(let i=0;i<n;i++){
+      if(done[i] || tasks[i].optional) continue;
+      if(tasks[i].dueDate <= d){
+        byDay[key].push(tasks[i]); used += tasks[i].weight; remainingWeight -= tasks[i].weight;
+        done[i]=true; notDoneCount--;
+      }
+    }
+    // 2a) baseline fill, due-date order, up to `cap` — guarantees smooth pacing for every tier,
+    //     so priority content below can never starve ordinary near-term chapters into a pile-up.
+    for(const idx of dueOrder){
+      if(used >= cap) break;
+      if(done[idx]) continue;
+      const t = tasks[idx];
+      if(t.fixed && t.dueDate > d) continue;
+      const effectiveLookahead = t.type==='bio-revise' ? 5 : LOOKAHEAD_DAYS;
+      const daysAhead = Math.round((t.dueDate-d)/DAY);
+      if(daysAhead > effectiveLookahead) continue;
+      byDay[key].push(t); used += t.weight;
+      if(!t.optional) remainingWeight -= t.weight;
+      done[idx]=true; notDoneCount--;
+    }
+    // 2b) priority-tier bonus fill, on top of the baseline cap — this is where GOC/Hydrocarbons/
+    //     Equilibrium/Thermo(Chem)/Class 11 Physics (and bio revision filler) jump the queue.
+    const bonusCap = cap + priorityBonus;
+    for(const idx of fillOrder){
+      if(used >= bonusCap) break;
+      if(done[idx]) continue;
+      const t = tasks[idx];
+      if(t.fixed && t.dueDate > d) continue;
+      const effectiveLookahead = t.type==='bio-revise' ? 5 : LOOKAHEAD_DAYS;
+      const daysAhead = Math.round((t.dueDate-d)/DAY);
+      if(daysAhead > effectiveLookahead) continue;
+      byDay[key].push(t); used += t.weight;
+      if(!t.optional) remainingWeight -= t.weight;
+      done[idx]=true; notDoneCount--;
+    }
+    d = addDays(d,1);
+  }
+  return byDay;
+}
+
+// All chapters ever appearing in TESTS (incl. past ones), chronological per subject.
+// Used by the Catch-up tab and by the bio-revision filler — independent of buildTasks'
+// forward-looking (isPastTest-skipping) generation, since catch-up needs to cover
+// chapters whose only test occurrence has already passed.
+function allChaptersBySubject(){
+  const order = {Physics:[], Chemistry:[], Botany:[], Zoology:[]};
+  const seen = {};
+  TESTS.forEach(test=>{
+    if(test.mock) return;
+    ['Physics','Chemistry','Botany','Zoology'].forEach(subject=>{
+      (test.subjects[subject]||[]).forEach(raw=>{
+        const chapter = norm(raw);
+        const key = subject+'::'+chapter;
+        if(seen[key]) return;
+        seen[key]=true;
+        const subtopics = getSubtopics(subject,chapter);
+        order[subject].push({
+          chapter, cls: classOf(subject,chapter),
+          subtopicIds: subtopics.map((st,i)=>'NEW::'+subject+'::'+slug(chapter)+'::'+i),
+        });
+      });
+    });
+  });
+  return order;
+}
+
+// Periodically resurface already-completed Botany/Zoology chapters as light, OPTIONAL
+// filler (never forced onto a day) — roughly every ~25 days per chapter, only consumed
+// when there's genuine spare capacity after everything else.
+function buildBioRevisionFiller(progress, today, planEnd){
+  const INTERVAL = 25, MAX_CYCLES = 8;
+  const order = allChaptersBySubject();
+  const out = [];
+  ['Botany','Zoology'].forEach(subject=>{
+    order[subject].forEach(entry=>{
+      const id0 = entry.subtopicIds[0];
+      const p = progress[id0];
+      if(!p || !p.done) return;
+      const completedDate = toDate(p.completedDate);
+      const daysSince = Math.max(0, Math.round((today-completedDate)/DAY));
+      const startCycle = Math.max(0, Math.floor(daysSince/INTERVAL));
+      for(let c=startCycle; c<startCycle+MAX_CYCLES; c++){
+        const due = addDays(completedDate, (c+1)*INTERVAL);
+        if(due > planEnd) break;
+        out.push({
+          id:'BIOREV::'+subject+'::'+slug(entry.chapter)+'::'+c, type:'bio-revise',
+          subject, chapter: entry.chapter, label:'Revise: '+entry.chapter,
+          dueDate: due, weight:1, cls: entry.cls, optional:true,
+        });
+      }
+    });
+  });
+  return out;
+}
+
+// ============================================================================
+// STATE / STORAGE
+// ============================================================================
+let progress = {}; // id -> {done:true, completedDate:'YYYY-MM-DD'}
+let viewDate = midnight(new Date());
+let activeTestFilter = 'ALL';
+const REAL_TODAY = midnight(new Date());
+const PLAN_END = TESTS.reduce((m,t)=> toDate(t.date)>m?toDate(t.date):m, toDate(TESTS[0].date));
+const SPACED_INTERVALS = [1,3,7,16,35];
+
+async function loadProgress(){
+  try{ const r = await window.storage.get('daily-progress'); progress = r&&r.value ? JSON.parse(r.value) : {}; }
+  catch(e){ progress = {}; }
+}
+async function saveProgress(){ try{ await window.storage.set('daily-progress', JSON.stringify(progress)); }catch(e){} }
+
+function allTasks(){ return buildTasks(REAL_TODAY, progress); }
+function pendingTasks(){
+  const core = allTasks();
+  const bioFiller = buildBioRevisionFiller(progress, REAL_TODAY, PLAN_END);
+  return core.concat(bioFiller).filter(t=>!(progress[t.id]&&progress[t.id].done));
+}
+
+function toggleTask(id, checked){
+  if(checked){ progress[id] = {done:true, completedDate: fmt(REAL_TODAY)}; }
+  else { delete progress[id]; }
+  saveProgress();
+  render();
+}
+
+// ============================================================================
+// STATS
+// ============================================================================
+function computeStats(){
+  const core = allTasks();
+  const coreIds = new Set(core.map(t=>t.id));
+  const total = core.length;
+  const done = Object.entries(progress).filter(([id,p])=>p.done && coreIds.has(id)).length;
+  const pct = total? Math.round(done/total*100) : 0;
+
+  // streak: consecutive days up to today with >=1 completion
+  const completedDates = new Set(Object.values(progress).filter(p=>p.done).map(p=>p.completedDate));
+  let streak = 0, d = new Date(REAL_TODAY);
+  while(completedDates.has(fmt(d))){ streak++; d = addDays(d,-1); }
+
+  const future = TESTS.filter(t=>toDate(t.date) >= REAL_TODAY);
+  const next = future.sort((a,b)=>toDate(a.date)-toDate(b.date))[0];
+
+  return {pct, next, streak};
+}
+
+// ============================================================================
+// RENDER — Today tab
+// ============================================================================
+const TYPE_META = {
+  'new': {cls:'new', lbl:'New'}, 'revise': {cls:'revise', lbl:'Revise'},
+  'mock': {cls:'mock', lbl:'Mock Test'}, 'aiats-mock2': {cls:'mock', lbl:'Mock Test 2'},
+  'aiats-qs': {cls:'qs', lbl:'200 Qs'}, 'full-mock': {cls:'fullmock', lbl:'Open Mock'},
+  'bio-revise': {cls:'biorev', lbl:'Bio Revision'},
+};
+
+function renderToday(){
+  const sched = schedule(pendingTasks(), REAL_TODAY, PLAN_END);
+  const key = fmt(viewDate);
+  const items = (sched[key]||[]).slice().sort((a,b)=> (a.subject||'').localeCompare(b.subject||''));
+
+  document.getElementById('dayDow').textContent = viewDate.toLocaleDateString('en-IN',{weekday:'long'});
+  document.getElementById('dayFull').textContent = viewDate.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('datePick').value = key;
+
+  const banner = document.getElementById('dayBanner');
+  const totalW = items.reduce((s,t)=>s+t.weight,0);
+  const isToday = fmt(viewDate)===fmt(REAL_TODAY);
+  banner.innerHTML='';
+  if(totalW > 15){
+    banner.innerHTML = '<div class="banner warn">⚠ Heavy day — this is a compressed catch-up window before a nearby test (not every day looks like this). Prioritise the <b>Mock Test</b> and skim the rest if you are short on time; nothing here is lost, it just needed to land close to the deadline.</div>';
+  } else if(isToday && items.length===0){
+    banner.innerHTML = '<div class="banner info">Nothing mandatory is due today — great time to get ahead on Class 11, or use the spaced-repetition chips below.</div>';
+  }
+
+  const content = document.getElementById('dayContent');
+  content.innerHTML = '';
+
+  if(items.length===0 && totalW===0){
+    // still show review chips section below even if empty
+  } else {
+    const groups = {new:[], revise:[], mock:[], qs:[], biorev:[], other:[]};
+    items.forEach(t=>{
+      if(t.type==='new') groups.new.push(t);
+      else if(t.type==='revise') groups.revise.push(t);
+      else if(t.type==='mock'||t.type==='aiats-mock2'||t.type==='full-mock') groups.mock.push(t);
+      else if(t.type==='aiats-qs') groups.qs.push(t);
+      else if(t.type==='bio-revise') groups.biorev.push(t);
+      else groups.other.push(t);
+    });
+    const order = [['new','New topics'],['revise','Revision'],['mock','Mock tests'],['qs','Question practice'],['biorev','Bio revision (keeping it sharp for NEET)']];
+    order.forEach(([k,label])=>{
+      if(groups[k].length===0) return;
+      const sec = document.createElement('div');
+      sec.className='section-title';
+      sec.innerHTML = label+' <span class="cnt">'+groups[k].length+'</span>';
+      content.appendChild(sec);
+      groups[k].forEach(t=> content.appendChild(renderTaskRow(t)));
+    });
+  }
+
+  // spaced repetition chips
+  const reviewChips = computeReviewChips(viewDate);
+  if(reviewChips.length){
+    const sec = document.createElement('div');
+    sec.className='section-title';
+    sec.innerHTML = '🔁 Spaced-repetition quick revise <span class="cnt">'+reviewChips.length+'</span>';
+    content.appendChild(sec);
+    const row = document.createElement('div');
+    row.className='chip-row';
+    reviewChips.forEach(c=>{
+      const chip = document.createElement('label');
+      const chipDoneKey = 'RVW::'+c.task.id+'::'+key;
+      const isChipDone = !!progress[chipDoneKey];
+      chip.className='review-chip'+(isChipDone?' done':'');
+      chip.innerHTML = '<input type="checkbox" '+(isChipDone?'checked':'')+'><span class="rlbl">'+(c.task.chapter||c.task.label)+'</span> · '+c.daysAgo+'d ago';
+      chip.querySelector('input').addEventListener('change', e=>{
+        if(e.target.checked) progress[chipDoneKey] = {done:true, completedDate: fmt(REAL_TODAY)};
+        else delete progress[chipDoneKey];
+        saveProgress(); render();
+      });
+      row.appendChild(chip);
+    });
+    content.appendChild(row);
+  }
+
+  if(items.length===0 && reviewChips.length===0){
+    content.innerHTML = '<div class="banner empty">Nothing scheduled for this day.</div>';
+  }
+}
+
+function renderTaskRow(t){
+  const row = document.createElement('label');
+  const isDone = !!(progress[t.id]&&progress[t.id].done);
+  row.className='task'+(isDone?' done':'');
+  const meta = TYPE_META[t.type]||{cls:'new',lbl:t.type};
+  const subjTag = t.subject ? '<span class="t-dot" style="background:'+SUBJ_COLOR[t.subject]+'"></span><span class="t-subj">'+t.subject+'</span>' : '';
+  const clsTag = t.cls ? '<span class="t-cls">Class '+t.cls+'</span>' : '';
+  row.innerHTML = '<input type="checkbox" '+(isDone?'checked':'')+'>'+
+    '<div class="t-body"><div class="t-tags">'+subjTag+'<span class="t-type '+meta.cls+'">'+meta.lbl+'</span>'+clsTag+'</div>'+
+    '<div class="t-label">'+t.label+'</div></div>';
+  row.querySelector('input').addEventListener('change', e=> toggleTask(t.id, e.target.checked));
+  return row;
+}
+
+function computeReviewChips(day){
+  const key = fmt(day);
+  const chips = [];
+  Object.entries(progress).forEach(([id,p])=>{
+    if(!p.done || id.startsWith('RVW::')) return;
+    const diff = Math.round((day - toDate(p.completedDate))/DAY);
+    if(SPACED_INTERVALS.includes(diff)){
+      const task = allTasks().find(t=>t.id===id);
+      if(task) chips.push({task, daysAgo:diff});
+    }
+  });
+  return chips.slice(0,12);
+}
+
+// ============================================================================
+// RENDER — Test calendar tab
+// ============================================================================
+function renderTests(){
+  const filterBar = document.getElementById('testFilters');
+  filterBar.innerHTML='';
+  ['ALL','PT','TE','NRT','AIATS','MOCK'].forEach(ty=>{
+    const b = document.createElement('button');
+    b.className='chip'+(activeTestFilter===ty?' active':'');
+    b.textContent = ty==='ALL'?'All':(ty==='MOCK'?'Open Mock':ty);
+    b.onclick = ()=>{ activeTestFilter=ty; renderTests(); };
+    filterBar.appendChild(b);
+  });
+
+  const list = document.getElementById('testList');
+  list.innerHTML='';
+  const filtered = TESTS.filter(t=> activeTestFilter==='ALL' || t.type===activeTestFilter);
+  filtered.forEach(t=>{
+    const d = toDate(t.date);
+    const isPast = d < REAL_TODAY;
+    const diff = Math.round((d-REAL_TODAY)/DAY);
+    const lead = leadFor(t.type);
+    const card = document.createElement('div');
+    card.className = 'test-card'+(isPast?' past':'');
+    let chaptersHtml = '';
+    if(!t.mock){
+      chaptersHtml = '<div class="test-chapters">'+
+        ['Physics','Chemistry','Botany','Zoology'].map(s=>
+          (t.subjects[s]&&t.subjects[s].length) ? '<b>'+s+':</b> '+t.subjects[s].join('; ') : ''
+        ).filter(Boolean).join('<br>')+'</div>';
+    }
+    card.innerHTML = '<div class="test-top">'+
+      '<div><span class="test-id">'+t.id+'</span><span class="test-tag">'+TYPE_LABEL[t.type]+'</span></div>'+
+      '<div class="test-date">'+t.dateLabel+'<br><span style="color:var(--muted)">'+(isPast?Math.abs(diff)+' days ago':(diff===0?'today':'in '+diff+' days'))+'</span></div>'+
+      '</div>'+
+      (t.mock?'':'<div class="test-due">Topics due '+lead+' days before → '+fmt(addDays(d,-lead))+'</div>')+
+      chaptersHtml;
+    list.appendChild(card);
+  });
+}
+
+// ============================================================================
+// RENDER — Catch-up tab
+// ============================================================================
+function isChapterDone(entry){
+  return entry.subtopicIds.every(id => progress[id] && progress[id].done);
+}
+function setChapterDone(entry, done){
+  entry.subtopicIds.forEach(id=>{
+    if(done) progress[id] = {done:true, completedDate: fmt(REAL_TODAY)};
+    else delete progress[id];
+  });
+}
+
+function renderCatchup(){
+  const body = document.getElementById('catchupBody');
+  body.innerHTML = '';
+  const order = allChaptersBySubject();
+
+  ['Physics','Chemistry','Botany','Zoology'].forEach(subject=>{
+    const list = order[subject];
+    const section = document.createElement('div');
+    section.className = 'catchup-subject';
+
+    const head = document.createElement('div');
+    head.className = 'section-title';
+    head.innerHTML = '<span class="t-dot" style="background:'+SUBJ_COLOR[subject]+'"></span> '+subject;
+    section.appendChild(head);
+
+    // bulk "mark up through X" control
+    const bulk = document.createElement('div');
+    bulk.className = 'catchup-bulk';
+    const sel = document.createElement('select');
+    sel.className = 'datepick';
+    const optDefault = document.createElement('option');
+    optDefault.textContent = "I've completed up through…";
+    optDefault.value = '';
+    sel.appendChild(optDefault);
+    list.forEach((entry,i)=>{
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = entry.chapter;
+      sel.appendChild(opt);
+    });
+    const applyBtn = document.createElement('button');
+    applyBtn.className = 'todaybtn';
+    applyBtn.textContent = 'Apply';
+    applyBtn.onclick = ()=>{
+      const idx = parseInt(sel.value,10);
+      if(isNaN(idx)) return;
+      for(let i=0;i<=idx;i++) setChapterDone(list[i], true);
+      saveProgress(); render();
+    };
+    bulk.appendChild(sel); bulk.appendChild(applyBtn);
+    section.appendChild(bulk);
+
+    const chipRow = document.createElement('div');
+    chipRow.className = 'chip-row';
+    list.forEach(entry=>{
+      const done = isChapterDone(entry);
+      const chip = document.createElement('label');
+      chip.className = 'review-chip'+(done?' done':'');
+      chip.innerHTML = '<input type="checkbox" '+(done?'checked':'')+'><span class="rlbl">'+entry.chapter+'</span>'+(entry.cls?' · Cl.'+entry.cls:'');
+      chip.querySelector('input').addEventListener('change', e=>{
+        setChapterDone(entry, e.target.checked);
+        saveProgress(); render();
+      });
+      chipRow.appendChild(chip);
+    });
+    section.appendChild(chipRow);
+    body.appendChild(section);
+  });
+}
+
+// ============================================================================
+// GLOBAL RENDER + INIT
+// ============================================================================
+function render(){
+  const {pct, next, streak} = computeStats();
+  document.getElementById('statProgress').textContent = pct+'%';
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('statStreak').textContent = streak;
+  document.getElementById('statNext').textContent = next ? next.id : '—';
+  document.getElementById('statNextLbl').textContent = next ? ('IN '+Math.round((toDate(next.date)-REAL_TODAY)/DAY)+' DAYS') : 'NO TESTS LEFT';
+  renderToday();
+  renderTests();
+  if(document.getElementById('tab-catchup').style.display !== 'none') renderCatchup();
+}
+
+document.getElementById('prevDay').onclick = ()=>{ viewDate = addDays(viewDate,-1); renderToday(); };
+document.getElementById('nextDay').onclick = ()=>{ viewDate = addDays(viewDate,1); renderToday(); };
+document.getElementById('jumpToday').onclick = ()=>{ viewDate = midnight(new Date()); renderToday(); };
+document.getElementById('datePick').onchange = (e)=>{ if(e.target.value){ viewDate = toDate(e.target.value); renderToday(); } };
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.onclick = ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-today').style.display = tab.dataset.tab==='today' ? '' : 'none';
+    document.getElementById('tab-tests').style.display = tab.dataset.tab==='tests' ? '' : 'none';
+    document.getElementById('tab-catchup').style.display = tab.dataset.tab==='catchup' ? '' : 'none';
+    if(tab.dataset.tab==='catchup') renderCatchup();
+  };
+});
+
+(async function init(){
+  await loadProgress();
+  render();
+})();
+</script>
+</body>
+</html>
