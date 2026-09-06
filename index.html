@@ -70,6 +70,7 @@
   .t-type.mock{background:rgba(242,184,75,0.15);color:var(--amber);}
   .t-type.qs{background:rgba(62,217,196,0.15);color:var(--chemistry);}
   .t-type.fullmock{background:rgba(255,107,107,0.15);color:var(--red);}
+  .t-type.biorev{background:rgba(127,216,88,0.13);color:var(--botany);}
   .t-cls{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted-2);border:1px solid var(--border);border-radius:5px;padding:1px 5px;}
   .t-label{font-size:13.5px;line-height:1.4;color:var(--text);}
 
@@ -106,7 +107,12 @@
   .test-chapters{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6;}
   .test-chapters b{color:var(--text);font-weight:500;}
 
+  .catchup-subject{margin-bottom:22px;}
+  .catchup-bulk{display:flex;gap:8px;margin-bottom:10px;}
+  .catchup-bulk select{flex:1;min-width:0;}
   .empty{text-align:center;color:var(--muted);padding:50px 20px;font-size:13px;}
+  .leisure-block{margin-top:18px;padding:12px 14px;border-radius:10px;background:rgba(177,140,255,0.08);border:1px dashed rgba(177,140,255,0.35);color:var(--muted);font-size:12.5px;line-height:1.5;}
+  .leisure-block b{color:var(--purple);}
   footer{text-align:center;color:var(--muted-2);font-size:11px;margin-top:36px;font-family:'JetBrains Mono',monospace;line-height:1.7;}
 </style>
 </head>
@@ -128,6 +134,8 @@
   <div class="tabs">
     <button class="tab active" data-tab="today">Today's Plan</button>
     <button class="tab" data-tab="tests">Test Calendar</button>
+    <button class="tab" data-tab="catchup">Catch-up</button>
+    <button class="tab" data-tab="backlog">Backlog</button>
   </div>
 
   <div id="tab-today">
@@ -146,13 +154,18 @@
       <summary>Why this plan is built this way <span class="arrow">▸</span></summary>
       <div class="body">
         <ul>
-          <li><b>Backward planning from test dates</b> — Practice Tests, Term Exams &amp; NRTs: topics finish 4 days before the test, then a self mock-test slot before you sit it. AIATS: everything is fully re-revised at least 10 days out, with <b>2 mock tests</b> and <b>~200 practice questions per chapter</b> worked into the days before.</li>
-          <li><b>Chapters broken into 3–7 topics</b> — every Physics &amp; Chemistry chapter is split into digestible sub-topics so no single day means "read a whole chapter."</li>
-          <li><b>Gentle, adapting load</b> — the planner starts light and ramps up over the first few weeks, then auto-balances daily load against however much time is actually left before the exam it's prepping for.</li>
-          <li><b>Class 11 gets first claim on free days</b> — whenever there's spare capacity (no near-term test topic due), the plan pulls in Class 11 chapters early, so the full 11th syllabus is wrapped up well before the AIATS-09 all-syllabus mocks begin (21 Mar 2027) — not crammed at the end.</li>
+          <li><b>Real hour budgets, not abstract "load"</b> — 5-7h on weekdays, 8-12h on weekends, on top of coaching. Every task carries a realistic time estimate (a Physics/Chem sub-topic ≈1h, a whole Bio chapter ≈2.5h, a 20-question chunk ≈30min), so the day's plan is sized in actual hours you'll spend, not a vague unit.</li>
+          <li><b>All 86 chapters' first-time learning finishes by 1 Dec 2026</b> — every chapter, 11th and 12th, across all four subjects, is pulled forward to be <i>learned</i> by then regardless of when its own test would otherwise have allowed it. The 200-questions-per-chapter practice keeps running afterward via the daily question block, finishing naturally by around mid-to-late December — well before any AIATS actually needs it.</li>
+          <li><b>Class 11 : Class 12 in a 40:60 split</b> — whatever time is available for new-topic learning each day is divided this way, with either side able to use the other's leftover room rather than waste capacity.</li>
+          <li><b>Organic Chemistry, sequenced properly</b> — GOC, Hydrocarbons and Haloalkanes &amp; Haloarenes are prioritised first and must be genuinely finished before Alcohols/Phenols/Ethers, Aldehydes/Ketones/Carboxylic Acids, Amines or Biomolecules get pulled ahead of schedule — matching how the topics actually build on each other.</li>
+          <li><b>A reserved daily question-solving slot</b> — 1.5h on weekdays, 2h on weekends, ring-fenced so practice doesn't get crowded out by cramming new content.</li>
+          <li><b>Backward planning from test dates</b> — Practice Tests, Term Exams &amp; NRTs: topics finish 4 days before the test, then a self mock-test slot before you sit it. AIATS: everything is fully re-revised at least 10 days out, with 2 mock tests built in.</li>
+          <li><b>Bio revision, on a cycle</b> — once a Botany/Zoology chapter is marked done, it quietly resurfaces roughly every ~25 days as optional filler to help keep Biology accuracy high through NEET.</li>
           <li><b>Spaced repetition</b> — once you check a topic off, light "quick revise" reminders resurface it at 1, 3, 7, 16 and 35 days later (the classic Ebbinghaus forgetting-curve spacing), rather than reading something once and never touching it again.</li>
           <li><b>Active recall over re-reading</b> — mock tests and per-chapter question practice are built into the plan itself, because testing yourself sticks better than re-reading notes.</li>
-          <li><b>Interleaving</b> — each day mixes subjects (Physics/Chemistry/Botany/Zoology) rather than one giant single-subject block, which research on interleaved practice shows improves retention over "blocked" study.</li>
+          <li><b>Interleaving</b> — each day mixes subjects rather than one giant single-subject block, which research on interleaved practice shows improves retention over "blocked" study.</li>
+          <li><b>A daily wind-down block</b> — ~20-30 min for your web novel, every day, deliberately kept outside the study-hour count so it never feels like it's eating into your plan.</li>
+          <li><b>Backlog tab</b> — anything whose due date slips by unchecked shows up there so it's never silently lost, even though the daily plan already rolls it forward automatically.</li>
         </ul>
       </div>
     </details>
@@ -163,7 +176,17 @@
     <div id="testList"></div>
   </div>
 
-  <footer>Aakash Test Planner · Carry Forward &amp; One Year Medical · Batch window 17 Mar – 1 Apr 2026<br>Adaptive daily plan recomputed each time you open this page — anything left undone rolls forward.</footer>
+  <div id="tab-catchup" style="display:none;">
+    <div class="banner info">Already studied some of this before you started using the planner? Set your real starting point here so the plan stops asking you to (re)do things you've already covered. This only marks the <i>first-time learning</i> task for each chapter as done — future revision passes before later tests still show up normally.</div>
+    <div id="catchupBody"></div>
+  </div>
+
+  <div id="tab-backlog" style="display:none;">
+    <div class="banner info">Anything whose original due date has already passed but isn't checked off yet — the planner keeps rolling these forward automatically, but this is the one place to see them all at a glance and catch up.</div>
+    <div id="backlogBody"></div>
+  </div>
+
+  <footer>Aakash Test Planner · Carry Forward &amp; One Year Medical · Batch window 17 Mar – 1 Apr 2026<br>Adaptive daily plan recomputed each time you open this page — anything left undone rolls forward.<br><span style="opacity:.6">Build 2026-09-06-c · dynamic prereq gate fix</span></footer>
 </div>
 
 <script>
@@ -278,7 +301,7 @@ const TESTS = [
 const TYPE_LABEL = {PT:'Practice Test', TE:'Term Exam', NRT:'NCERT Revision (Online)', AIATS:'AIATS', MOCK:'Open Mock — full syllabus'};
 const SUBJ_COLOR = {Physics:'var(--physics)', Chemistry:'var(--chemistry)', Botany:'var(--botany)', Zoology:'var(--zoology)'};
 
-const ALIAS = { 'Electric Charges and Fields':'Electric Charges & Fields', 'Electromagnetic Wave':'Electromagnetic Waves', 'Semiconductors':'Semiconductor Electronics' };
+const ALIAS = { 'Electric Charges and Fields':'Electric Charges & Fields', 'Electromagnetic Wave':'Electromagnetic Waves', 'Semiconductors':'Semiconductor Electronics', 'Principles of Inheritance and Variation':'Principles of Inheritance & Variation' };
 function norm(name){ return ALIAS[name] || name; }
 function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
 
@@ -369,9 +392,51 @@ function fmt(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0
 function midnight(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
 function leadFor(type){ return type==='AIATS' ? 10 : 4; }
 
-function buildTasks(today){
+function isChapterMarkedDone(progress, subject, chapter){
+  const subtopics = getSubtopics(subject, chapter);
+  return subtopics.every((st,i)=>{
+    const id = 'NEW::'+subject+'::'+slug(chapter)+'::'+i;
+    return progress[id] && progress[id].done;
+  });
+}
+
+// Hour estimates per task type — these are now REAL hours, not abstract units.
+const HRS = {
+  newPhysChem: 1,      // one Physics/Chemistry subtopic, properly studied
+  newBio: 2.5,          // one whole Botany/Zoology chapter (NCERT bio chapters are dense)
+  revise: 0.4,          // a lightweight revisit of an already-learned chapter
+  mock: 1.5,            // a self mock test
+  aiatsMock2: 1.5,
+  qsChunk: 0.5,          // one 20-question practice chunk (~1.5 min/question incl. review)
+  fullMock: 3.5,         // a real full-syllabus NEET-pattern sitting
+  bioRevise: 0.4,
+};
+const DEC1 = toDate('2026-12-01'); // hard cutoff: all first-time learning (11th+12th, every subject) done by here
+
+function buildTasks(today, progress){
+  progress = progress || {};
   const tasks = [];
   const seen = {};
+
+  // Every Class 11 chapter is naturally first introduced from NRT-04 (Dec) onward — i.e. AFTER
+  // Dec 1 — so capping them all at exactly Dec 1 would collapse them onto a single cliff-edge
+  // date instead of spreading smoothly. Stagger their due dates evenly across [today, Dec1]
+  // instead, in their natural chapter order, so mandatory pressure builds up gradually.
+  const cls11Ordered = [];
+  ['Physics','Chemistry','Botany','Zoology'].forEach(subject=>{
+    allChaptersBySubject()[subject].forEach(entry=>{
+      if(entry.cls===11 && !isChapterMarkedDone(progress, subject, entry.chapter)){
+        cls11Ordered.push(subject+'::'+entry.chapter);
+      }
+    });
+  });
+  const cls11StaggeredDue = {};
+  const staggerSpan = Math.max(1, Math.round((DEC1-today)/DAY));
+  cls11Ordered.forEach((key,i)=>{
+    cls11StaggeredDue[key] = addDays(today, Math.max(1, Math.round((i+1)/cls11Ordered.length * staggerSpan)));
+  });
+  const firstEffectiveDue = {}; // key -> the effectiveDue of the test that ACTUALLY first taught this chapter
+  const qsGenerated = {}; // key -> true once this chapter's 10 question-practice chunks have been created
 
   TESTS.forEach(test=>{
     const testDate = toDate(test.date);
@@ -380,7 +445,7 @@ function buildTasks(today){
     if(test.mock){
       if(!isPastTest){
         tasks.push({id:'FMOCK::'+test.id, type:'full-mock', subject:null, chapter:null,
-          label:'Attempt full-syllabus mock: '+test.id, dueDate: testDate, testId:test.id, weight:3, cls:null, fixed:true});
+          label:'Attempt full-syllabus mock: '+test.id, dueDate: testDate, testId:test.id, weight:HRS.fullMock, cls:null, fixed:true});
       }
       return;
     }
@@ -395,19 +460,36 @@ function buildTasks(today){
         const chapter = norm(raw);
         chaptersThisTest.push({subject,chapter});
         const key = subject+'::'+chapter;
+
+        if(isPastTest){
+          if(isChapterMarkedDone(progress, subject, chapter)){
+            seen[key] = true;
+            if(!firstEffectiveDue[key]) firstEffectiveDue[key] = addDays(testDate,-lead); // studied a while back
+          }
+          return;
+        }
+
         const isFirst = !seen[key];
         seen[key] = true;
-        if(isPastTest) return;
 
         if(isFirst){
+          // Every chapter's first-time learning is capped at Dec 1 regardless of when its own
+          // test would otherwise have allowed it. Class 11 chapters (which ALL naturally fall
+          // after Dec 1) use a staggered date spread across the window instead of a flat Dec 1
+          // cliff-edge, so mandatory pressure builds up gradually rather than piling up at once.
           const cls = classOf(subject,chapter);
+          const newDue = (cls===11 && cls11StaggeredDue[key])
+            ? cls11StaggeredDue[key]
+            : (effectiveDue < DEC1 ? effectiveDue : DEC1);
+          firstEffectiveDue[key] = newDue;
+          const isBio = (subject==='Botany'||subject==='Zoology');
           getSubtopics(subject,chapter).forEach((st,i)=>{
             tasks.push({id:'NEW::'+subject+'::'+slug(chapter)+'::'+i, type:'new', subject, chapter, subtopic:st,
-              label: chapter+' — '+st, dueDate: effectiveDue, testId: test.id, weight:1, cls});
+              label: chapter+' — '+st, dueDate: newDue, testId: test.id, weight: isBio?HRS.newBio:HRS.newPhysChem, cls});
           });
         } else {
           tasks.push({id:'REV::'+subject+'::'+slug(chapter)+'::'+test.id, type:'revise', subject, chapter, subtopic:null,
-            label: 'Revise: '+chapter, dueDate: effectiveDue, testId: test.id, weight:1, cls: classOf(subject,chapter)});
+            label: 'Revise: '+chapter, dueDate: effectiveDue, testId: test.id, weight:HRS.revise, cls: classOf(subject,chapter)});
         }
       });
     });
@@ -415,19 +497,36 @@ function buildTasks(today){
     if(isPastTest) return;
 
     tasks.push({id:'MOCK::'+test.id, type:'mock', subject:null, chapter:null,
-      label:'Self mock test — '+test.id+' topics', dueDate: addDays(testDate,-1), testId:test.id, weight:2, cls:null});
+      label:'Self mock test — '+test.id+' topics', dueDate: addDays(testDate,-1), testId:test.id, weight:HRS.mock, cls:null});
 
     if(test.type==='AIATS'){
       tasks.push({id:'AMOCK2::'+test.id, type:'aiats-mock2', subject:null, chapter:null,
-        label:'2nd mock test — '+test.id+' (full revision)', dueDate: addDays(testDate,-2), testId:test.id, weight:2, cls:null});
+        label:'2nd mock test — '+test.id+' (full revision)', dueDate: addDays(testDate,-2), testId:test.id, weight:HRS.aiatsMock2, cls:null});
+
+      // Practice questions, chunked to 20/day instead of dumped as one 200-question task.
+      // Generated ONCE per chapter (at its first AIATS appearance) — a chapter re-tested
+      // cumulatively at a LATER AIATS doesn't need a second fresh 200-question grind, the
+      // existing "Revise" task already covers that. Chapters taught a while back get a long
+      // runway (from when they were actually first studied, but never before today); chapters
+      // introduced at THIS very AIATS are stuck with the ~10-day window — a real constraint of
+      // being close to the exam, not something to paper over.
       const uniqChapters = [...new Map(chaptersThisTest.map(c=>[c.subject+'::'+c.chapter,c])).values()];
       const lastSafeDay = addDays(testDate,-1);
-      uniqChapters.forEach((c,i)=>{
-        const spread = Math.floor(i / Math.max(1,Math.ceil(uniqChapters.length/lead)));
-        let due = addDays(effectiveDue, spread);
-        if(due > lastSafeDay) due = lastSafeDay;
-        tasks.push({id:'AQS::'+c.subject+'::'+slug(c.chapter)+'::'+test.id, type:'aiats-qs', subject:c.subject, chapter:c.chapter,
-          label:'Practice ~200 Qs: '+c.chapter, dueDate: due, testId:test.id, weight:2, cls: classOf(c.subject,c.chapter)});
+      const CHUNKS = 10, PER_CHUNK = 20;
+      uniqChapters.forEach((c)=>{
+        const key = c.subject+'::'+c.chapter;
+        if(qsGenerated[key]) return;
+        qsGenerated[key] = true;
+        let windowStart = firstEffectiveDue[key] || effectiveDue;
+        if(windowStart < today) windowStart = today;
+        if(windowStart > lastSafeDay) windowStart = lastSafeDay;
+        const spanDays = Math.max(0, Math.round((lastSafeDay-windowStart)/DAY));
+        for(let i=0;i<CHUNKS;i++){
+          const due = addDays(windowStart, Math.round(i*spanDays/(CHUNKS-1||1)));
+          tasks.push({id:'AQS::'+c.subject+'::'+slug(c.chapter)+'::'+test.id+'::'+i, type:'aiats-qs',
+            subject:c.subject, chapter:c.chapter, label:'Practice '+PER_CHUNK+' Qs: '+c.chapter+' ('+(i+1)+'/'+CHUNKS+')',
+            dueDate: due, testId:test.id, weight:HRS.qsChunk, cls: classOf(c.subject,c.chapter)});
+        }
       });
     }
   });
@@ -435,50 +534,238 @@ function buildTasks(today){
 }
 
 const LOOKAHEAD_DAYS = 70, RAMP_DAYS = 35;
+function isWeekend(d){ const w=d.getDay(); return w===0 || w===6; }
+function capRangeFor(d){ return isWeekend(d) ? [8,12] : [5,7]; } // real hours/day, on top of coaching
+function qsTargetFor(d){ return isWeekend(d) ? 2 : 1.5; }        // reserved daily question-solving slot
+
+// Priority tiers for OPTIONAL "get ahead" filling only — never affects real deadlines.
+// 0 = Organic Chem (11th GOC/Hydrocarbons + 12th Haloalkanes..Biomolecules),
+// 1 = Equilibrium/Thermo(Chem) & all Class 11 Physics, 2 = other Class 11 content,
+// 3 = bio-revision filler, 4 = everything else (normal due-date order).
+function tierOf(t){
+  if(t.type==='bio-revise') return 3;
+  if(t.type==='new' || t.type==='revise'){
+    const organicChapters = new Set([
+      'Organic Chemistry: Basic Principles & Techniques', 'Hydrocarbons',
+      'Haloalkanes and Haloarenes', 'Alcohols, Phenols and Ethers',
+      'Aldehydes, Ketones and Carboxylic Acids', 'Amines', 'Biomolecules',
+    ]);
+    if(t.subject==='Chemistry' && organicChapters.has(t.chapter)) return 0;
+    if(t.subject==='Chemistry' && (t.chapter==='Equilibrium' || t.chapter==='Thermodynamics')) return 1;
+    if(t.subject==='Physics' && t.cls===11) return 1;
+    if(t.cls===11) return 2;
+  }
+  return 4;
+}
+
 function schedule(pendingTasks, today, planEnd){
-  const pending = pendingTasks.slice().sort((a,b)=> a.dueDate-b.dueDate || a.id.localeCompare(b.id));
-  const done = new Array(pending.length).fill(false);
-  let mandatoryPtr = 0;
+  const tasks = pendingTasks.slice();
+  const n = tasks.length;
+  const done = new Array(n).fill(false);
+
+  const GATE_CHAPTERS = new Set(['Organic Chemistry: Basic Principles & Techniques','Hydrocarbons','Haloalkanes and Haloarenes']);
+  const GATED_CHAPTERS = new Set(['Alcohols, Phenols and Ethers','Aldehydes, Ketones and Carboxylic Acids','Amines','Biomolecules']);
+  const organicGateOpen = !tasks.some(t=>t.type==='new' && GATE_CHAPTERS.has(t.chapter));
+  const gatedOut = (t)=> t.type==='new' && !organicGateOpen && GATED_CHAPTERS.has(t.chapter);
+
+  // Index of 'new' task positions per chapter, so the prerequisite check below is O(1) instead
+  // of an O(n) scan per candidate per day.
+  const newIdxByChapter = {};
+  tasks.forEach((t,i)=>{
+    if(t.type!=='new') return;
+    const key = t.subject+'::'+t.chapter;
+    (newIdxByChapter[key] = newIdxByChapter[key] || []).push(i);
+  });
+  // A 'revise' or 'aiats-qs' (question practice) task only makes sense once that chapter's
+  // 'new' tasks are DONE — but "done" here must mean done WITHIN THE SIMULATED PLAN (i.e.
+  // already placed on an earlier day, tracked live via `done[]`), not "already completed in
+  // real life right this second". A 'new' task never becomes real-life-done mid-simulation, so
+  // checking real progress alone would permanently block almost every chapter's practice for
+  // the entire simulated year. Checking `done[]` lets each chapter's practice correctly unlock
+  // as soon as the plan itself has that chapter's learning finished, exactly where it should.
+  function prereqUnmet(t){
+    if(t.type!=='revise' && t.type!=='aiats-qs') return false;
+    const idxs = newIdxByChapter[t.subject+'::'+t.chapter];
+    if(!idxs) return false; // no pending 'new' task for this chapter at all — already done, or never generated
+    return idxs.some(i=>!done[i]);
+  }
+  const excluded = (t)=> gatedOut(t) || prereqUnmet(t);
+
+  // 'new' and 'aiats-qs' are deliberately EXCLUDED from the general due/tier phases below —
+  // they're only placed via their own dedicated mechanisms (the 40:60 split and the daily
+  // question-solving reservation). Without this, tier-priority content (e.g. Class 11 Physics)
+  // leaks extra allocation in through the general fill and quietly breaks the 40:60 ratio, and
+  // question-solving similarly overflows its reserved slot and crowds out new-topic time.
+  // Note: unlike `gatedOut` (a fixed, precomputable condition), `prereqUnmet` depends on `done[]`
+  // and changes as the day-loop progresses — so these order arrays are only valid for SORTING;
+  // `excluded(...)` must be re-checked live at placement time inside fillPool, which it is.
+  const dueOrder = tasks.map((t,i)=>i).filter(i=> !gatedOut(tasks[i]) && tasks[i].type!=='new' && tasks[i].type!=='aiats-qs')
+    .sort((a,b)=> tasks[a].dueDate-tasks[b].dueDate || tasks[a].id.localeCompare(tasks[b].id));
+  const fillOrder = tasks.map((t,i)=>i).filter(i=> !gatedOut(tasks[i]) && tasks[i].type!=='new' && tasks[i].type!=='aiats-qs').sort((a,b)=>{
+    const tierA=tierOf(tasks[a]), tierB=tierOf(tasks[b]);
+    if(tierA!==tierB) return tierA-tierB;
+    return tasks[a].dueDate-tasks[b].dueDate || tasks[a].id.localeCompare(tasks[b].id);
+  });
+  const qsOrder = tasks.map((t,i)=>i).filter(i=>tasks[i].type==='aiats-qs')
+    .sort((a,b)=> tasks[a].dueDate-tasks[b].dueDate || tasks[a].id.localeCompare(tasks[b].id));
+  const newOrderByTier = (clsWanted)=> tasks.map((t,i)=>i)
+    .filter(i=>tasks[i].type==='new' && tasks[i].cls===clsWanted && !gatedOut(tasks[i]))
+    .sort((a,b)=>{
+      const tierA=tierOf(tasks[a]), tierB=tierOf(tasks[b]);
+      if(tierA!==tierB) return tierA-tierB;
+      return tasks[a].dueDate-tasks[b].dueDate || tasks[a].id.localeCompare(tasks[b].id);
+    });
+  const cls11NewOrder = newOrderByTier(11);
+  const cls12NewOrder = newOrderByTier(12);
+
   const byDay = {};
   let d = new Date(today);
-  let remainingWeight = pending.reduce((s,t)=>s+t.weight,0);
+  let remainingWeight = tasks.filter(t=>!t.optional).reduce((s,t)=>s+t.weight,0);
+  let notDoneCount = n;
 
-  while(d <= planEnd && mandatoryPtr < pending.length){
+  // Fills from `order` (skipping already-done / not-yet-eligible tasks) up to `targetHours`
+  // for the given day; returns hours actually placed. Shared `done`/`byDay`/`remainingWeight`
+  // are updated as a side effect so later phases in the same day see the up-to-date state.
+  function fillPool(order, targetHours, dayKey){
+    let usedHere = 0;
+    for(const idx of order){
+      if(usedHere >= targetHours) break;
+      if(done[idx]) continue;
+      const t = tasks[idx];
+      if(prereqUnmet(t)) continue;
+      if(t.fixed && t.dueDate > d) continue;
+      const effectiveLookahead = t.type==='bio-revise' ? 5 : LOOKAHEAD_DAYS;
+      const daysAhead = Math.round((t.dueDate-d)/DAY);
+      if(daysAhead > effectiveLookahead) continue;
+      byDay[dayKey].push(t); usedHere += t.weight;
+      if(!t.optional) remainingWeight -= t.weight;
+      done[idx]=true; notDoneCount--;
+    }
+    return usedHere;
+  }
+
+  while(d <= planEnd && notDoneCount > 0){
     const key = fmt(d);
+    byDay[key] = byDay[key] || [];
     const daysFromToday = Math.round((d-today)/DAY);
     const remainingDays = Math.max(1, Math.round((planEnd-d)/DAY)+1);
     const globalPace = remainingWeight/remainingDays;
     const HORIZON = 14;
     let nearWeight = 0;
-    for(let i=mandatoryPtr;i<pending.length;i++){
-      if(done[i]) continue;
-      const daysAhead = Math.round((pending[i].dueDate-d)/DAY);
-      if(daysAhead > HORIZON) break;
-      nearWeight += pending[i].weight;
+    for(let i=0;i<n;i++){
+      if(done[i] || tasks[i].optional) continue;
+      const daysAhead = Math.round((tasks[i].dueDate-d)/DAY);
+      if(daysAhead>=0 && daysAhead <= HORIZON) nearWeight += tasks[i].weight;
     }
     const localPace = nearWeight/HORIZON;
     const rampFactor = Math.min(1, 0.35 + 0.65*Math.min(1,daysFromToday/RAMP_DAYS));
-    const cap = Math.max(1, Math.max(globalPace,localPace)*rampFactor*1.15);
+    const range = capRangeFor(d);
+    const rawPace = Math.max(globalPace,localPace)*rampFactor*1.15;
+    const cap = Math.min(range[1], Math.max(range[0], rawPace)); // clamped to real weekday/weekend hour bounds
+    const priorityBonus = Math.min(1.5, 0.5 + rampFactor); // small extra room for pulling priority content early
 
     let used = 0;
-    byDay[key] = byDay[key] || [];
-    while(mandatoryPtr < pending.length && pending[mandatoryPtr].dueDate <= d){
-      byDay[key].push(pending[mandatoryPtr]); used += pending[mandatoryPtr].weight;
-      remainingWeight -= pending[mandatoryPtr].weight; done[mandatoryPtr]=true; mandatoryPtr++;
+
+    // 1) Mandatory: any real, non-optional deadline due today or earlier — always honoured,
+    //    even if it pushes the day over its normal hour budget (a real exam date can't slip).
+    //    Exception: a 'revise' or 'aiats-qs' task whose prerequisite 'new' task isn't done yet
+    //    is never forced — there's nothing to revise or practice yet, so it waits for the
+    //    prerequisite instead (which will itself already be under mandatory pressure, since it
+    //    has an earlier due date).
+    for(let i=0;i<n;i++){
+      if(done[i] || tasks[i].optional || prereqUnmet(tasks[i])) continue;
+      if(tasks[i].dueDate <= d){
+        byDay[key].push(tasks[i]); used += tasks[i].weight; remainingWeight -= tasks[i].weight;
+        done[i]=true; notDoneCount--;
+      }
     }
-    let scan = mandatoryPtr;
-    while(used < cap && scan < pending.length){
-      if(done[scan]){ scan++; continue; }
-      const t = pending[scan];
-      if(t.fixed && t.dueDate > d){ scan++; continue; }
-      const daysAhead = Math.round((t.dueDate-d)/DAY);
-      if(daysAhead > LOOKAHEAD_DAYS) break;
-      byDay[key].push(t); used += t.weight; remainingWeight -= t.weight; done[scan]=true; scan++;
+    // 2) Reserved daily question-solving slot (~1.5h weekday / ~2h weekend) — a consistent
+    //    practice habit, not something that gets crowded out by new-topic cramming.
+    if(used < cap) used += fillPool(qsOrder, Math.min(qsTargetFor(d), cap-used), key);
+
+    // 3) New-content learning, split 40:60 between Class 11 and Class 12 (with rollover if
+    //    either side runs out of eligible chapters so capacity is never wasted).
+    if(used < cap){
+      let remaining = cap - used;
+      let cls11Target = remaining*0.4, cls12Target = remaining*0.6;
+      const used11 = fillPool(cls11NewOrder, cls11Target, key);
+      used += used11;
+      if(used11 < cls11Target) cls12Target += (cls11Target - used11);
+      if(used < cap){
+        const used12 = fillPool(cls12NewOrder, Math.min(cls12Target, cap-used), key);
+        used += used12;
+        if(used12 < cls12Target && used < cap){
+          used += fillPool(cls11NewOrder, Math.min(cls12Target-used12, cap-used), key);
+        }
+      }
     }
-    while(mandatoryPtr < pending.length && done[mandatoryPtr]) mandatoryPtr++;
+    // 4) Baseline fill, due-date order, for whatever's left (revision, extra question practice,
+    //    mocks) — guarantees smooth pacing regardless of tier, so nothing piles up unexpectedly.
+    if(used < cap) used += fillPool(dueOrder, cap-used, key);
+
+    // 5) Small tier-priority bonus on top — lets Organic Chem / Class 11 Physics / bio revision
+    //    grab a little extra room beyond the normal cap when there's real slack in the day.
+    const bonusCap = cap + priorityBonus;
+    if(used < bonusCap) used += fillPool(fillOrder, bonusCap-used, key);
+
     d = addDays(d,1);
   }
   return byDay;
+}
+
+// All chapters ever appearing in TESTS (incl. past ones), chronological per subject.
+// Used by the Catch-up tab and by the bio-revision filler — independent of buildTasks'
+// forward-looking (isPastTest-skipping) generation, since catch-up needs to cover
+// chapters whose only test occurrence has already passed.
+function allChaptersBySubject(){
+  const order = {Physics:[], Chemistry:[], Botany:[], Zoology:[]};
+  const seen = {};
+  TESTS.forEach(test=>{
+    if(test.mock) return;
+    ['Physics','Chemistry','Botany','Zoology'].forEach(subject=>{
+      (test.subjects[subject]||[]).forEach(raw=>{
+        const chapter = norm(raw);
+        const key = subject+'::'+chapter;
+        if(seen[key]) return;
+        seen[key]=true;
+        const subtopics = getSubtopics(subject,chapter);
+        order[subject].push({
+          chapter, cls: classOf(subject,chapter),
+          subtopicIds: subtopics.map((st,i)=>'NEW::'+subject+'::'+slug(chapter)+'::'+i),
+        });
+      });
+    });
+  });
+  return order;
+}
+
+// Periodically resurface already-completed Botany/Zoology chapters as light, OPTIONAL
+// filler (never forced onto a day) — roughly every ~25 days per chapter, only consumed
+// when there's genuine spare capacity after everything else.
+function buildBioRevisionFiller(progress, today, planEnd){
+  const INTERVAL = 25, MAX_CYCLES = 8;
+  const order = allChaptersBySubject();
+  const out = [];
+  ['Botany','Zoology'].forEach(subject=>{
+    order[subject].forEach(entry=>{
+      const id0 = entry.subtopicIds[0];
+      const p = progress[id0];
+      if(!p || !p.done) return;
+      const completedDate = toDate(p.completedDate);
+      const daysSince = Math.max(0, Math.round((today-completedDate)/DAY));
+      const startCycle = Math.max(0, Math.floor(daysSince/INTERVAL));
+      for(let c=startCycle; c<startCycle+MAX_CYCLES; c++){
+        const due = addDays(completedDate, (c+1)*INTERVAL);
+        if(due > planEnd) break;
+        out.push({
+          id:'BIOREV::'+subject+'::'+slug(entry.chapter)+'::'+c, type:'bio-revise',
+          subject, chapter: entry.chapter, label:'Revise: '+entry.chapter,
+          dueDate: due, weight:1, cls: entry.cls, optional:true,
+        });
+      }
+    });
+  });
+  return out;
 }
 
 // ============================================================================
@@ -497,8 +784,12 @@ async function loadProgress(){
 }
 async function saveProgress(){ try{ await window.storage.set('daily-progress', JSON.stringify(progress)); }catch(e){} }
 
-function allTasks(){ return buildTasks(REAL_TODAY); }
-function pendingTasks(){ return allTasks().filter(t=>!(progress[t.id]&&progress[t.id].done)); }
+function allTasks(){ return buildTasks(REAL_TODAY, progress); }
+function pendingTasks(){
+  const core = allTasks();
+  const bioFiller = buildBioRevisionFiller(progress, REAL_TODAY, PLAN_END);
+  return core.concat(bioFiller).filter(t=>!(progress[t.id]&&progress[t.id].done));
+}
 
 function toggleTask(id, checked){
   if(checked){ progress[id] = {done:true, completedDate: fmt(REAL_TODAY)}; }
@@ -511,8 +802,10 @@ function toggleTask(id, checked){
 // STATS
 // ============================================================================
 function computeStats(){
-  const total = allTasks().length;
-  const done = Object.values(progress).filter(p=>p.done).length;
+  const core = allTasks();
+  const coreIds = new Set(core.map(t=>t.id));
+  const total = core.length;
+  const done = Object.entries(progress).filter(([id,p])=>p.done && coreIds.has(id)).length;
   const pct = total? Math.round(done/total*100) : 0;
 
   // streak: consecutive days up to today with >=1 completion
@@ -532,7 +825,8 @@ function computeStats(){
 const TYPE_META = {
   'new': {cls:'new', lbl:'New'}, 'revise': {cls:'revise', lbl:'Revise'},
   'mock': {cls:'mock', lbl:'Mock Test'}, 'aiats-mock2': {cls:'mock', lbl:'Mock Test 2'},
-  'aiats-qs': {cls:'qs', lbl:'200 Qs'}, 'full-mock': {cls:'fullmock', lbl:'Open Mock'},
+  'aiats-qs': {cls:'qs', lbl:'20 Qs'}, 'full-mock': {cls:'fullmock', lbl:'Open Mock'},
+  'bio-revise': {cls:'biorev', lbl:'Bio Revision'},
 };
 
 function renderToday(){
@@ -548,7 +842,8 @@ function renderToday(){
   const totalW = items.reduce((s,t)=>s+t.weight,0);
   const isToday = fmt(viewDate)===fmt(REAL_TODAY);
   banner.innerHTML='';
-  if(totalW > 15){
+  const heavyThreshold = isWeekend(viewDate) ? 14 : 9; // meaningfully above the normal 8-12h/5-7h day
+  if(totalW > heavyThreshold){
     banner.innerHTML = '<div class="banner warn">⚠ Heavy day — this is a compressed catch-up window before a nearby test (not every day looks like this). Prioritise the <b>Mock Test</b> and skim the rest if you are short on time; nothing here is lost, it just needed to land close to the deadline.</div>';
   } else if(isToday && items.length===0){
     banner.innerHTML = '<div class="banner info">Nothing mandatory is due today — great time to get ahead on Class 11, or use the spaced-repetition chips below.</div>';
@@ -560,15 +855,16 @@ function renderToday(){
   if(items.length===0 && totalW===0){
     // still show review chips section below even if empty
   } else {
-    const groups = {new:[], revise:[], mock:[], qs:[], other:[]};
+    const groups = {new:[], revise:[], mock:[], qs:[], biorev:[], other:[]};
     items.forEach(t=>{
       if(t.type==='new') groups.new.push(t);
       else if(t.type==='revise') groups.revise.push(t);
       else if(t.type==='mock'||t.type==='aiats-mock2'||t.type==='full-mock') groups.mock.push(t);
       else if(t.type==='aiats-qs') groups.qs.push(t);
+      else if(t.type==='bio-revise') groups.biorev.push(t);
       else groups.other.push(t);
     });
-    const order = [['new','New topics'],['revise','Revision'],['mock','Mock tests'],['qs','Question practice']];
+    const order = [['new','New topics'],['revise','Revision'],['mock','Mock tests'],['qs','Question practice'],['biorev','Bio revision (keeping it sharp for NEET)']];
     order.forEach(([k,label])=>{
       if(groups[k].length===0) return;
       const sec = document.createElement('div');
@@ -607,6 +903,12 @@ function renderToday(){
   if(items.length===0 && reviewChips.length===0){
     content.innerHTML = '<div class="banner empty">Nothing scheduled for this day.</div>';
   }
+
+  // Always present, every day — personal wind-down time, deliberately outside the study-hour budget.
+  const leisure = document.createElement('div');
+  leisure.className = 'leisure-block';
+  leisure.innerHTML = '🌙 <b>Wind-down:</b> ~20–30 min reading your web novel, guilt-free — this is separate from your study hours, not part of them.';
+  content.appendChild(leisure);
 }
 
 function renderTaskRow(t){
@@ -679,6 +981,121 @@ function renderTests(){
 }
 
 // ============================================================================
+// RENDER — Catch-up tab
+// ============================================================================
+function isChapterDone(entry){
+  return entry.subtopicIds.every(id => progress[id] && progress[id].done);
+}
+function setChapterDone(entry, done){
+  entry.subtopicIds.forEach(id=>{
+    if(done) progress[id] = {done:true, completedDate: fmt(REAL_TODAY)};
+    else delete progress[id];
+  });
+}
+
+function renderCatchup(){
+  const body = document.getElementById('catchupBody');
+  body.innerHTML = '';
+  const order = allChaptersBySubject();
+
+  ['Physics','Chemistry','Botany','Zoology'].forEach(subject=>{
+    const list = order[subject];
+    const section = document.createElement('div');
+    section.className = 'catchup-subject';
+
+    const head = document.createElement('div');
+    head.className = 'section-title';
+    head.innerHTML = '<span class="t-dot" style="background:'+SUBJ_COLOR[subject]+'"></span> '+subject;
+    section.appendChild(head);
+
+    // bulk "mark up through X" control
+    const bulk = document.createElement('div');
+    bulk.className = 'catchup-bulk';
+    const sel = document.createElement('select');
+    sel.className = 'datepick';
+    const optDefault = document.createElement('option');
+    optDefault.textContent = "I've completed up through…";
+    optDefault.value = '';
+    sel.appendChild(optDefault);
+    list.forEach((entry,i)=>{
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = entry.chapter;
+      sel.appendChild(opt);
+    });
+    const applyBtn = document.createElement('button');
+    applyBtn.className = 'todaybtn';
+    applyBtn.textContent = 'Apply';
+    applyBtn.onclick = ()=>{
+      const idx = parseInt(sel.value,10);
+      if(isNaN(idx)) return;
+      for(let i=0;i<=idx;i++) setChapterDone(list[i], true);
+      saveProgress(); render();
+    };
+    bulk.appendChild(sel); bulk.appendChild(applyBtn);
+    section.appendChild(bulk);
+
+    const chipRow = document.createElement('div');
+    chipRow.className = 'chip-row';
+    list.forEach(entry=>{
+      const done = isChapterDone(entry);
+      const chip = document.createElement('label');
+      chip.className = 'review-chip'+(done?' done':'');
+      chip.innerHTML = '<input type="checkbox" '+(done?'checked':'')+'><span class="rlbl">'+entry.chapter+'</span>'+(entry.cls?' · Cl.'+entry.cls:'');
+      chip.querySelector('input').addEventListener('change', e=>{
+        setChapterDone(entry, e.target.checked);
+        saveProgress(); render();
+      });
+      chipRow.appendChild(chip);
+    });
+    section.appendChild(chipRow);
+    body.appendChild(section);
+  });
+}
+
+// ============================================================================
+// RENDER — Backlog tab
+// ============================================================================
+function computeBacklog(){
+  const core = allTasks();
+  const bioFiller = buildBioRevisionFiller(progress, REAL_TODAY, PLAN_END);
+  return core.concat(bioFiller)
+    .filter(t=> !(progress[t.id]&&progress[t.id].done) && t.dueDate < REAL_TODAY)
+    .sort((a,b)=> a.dueDate-b.dueDate);
+}
+
+function renderBacklog(){
+  const body = document.getElementById('backlogBody');
+  body.innerHTML = '';
+  const items = computeBacklog();
+
+  if(items.length===0){
+    body.innerHTML = '<div class="banner empty">Nothing overdue right now — you\'re fully caught up. 🎉</div>';
+    return;
+  }
+
+  const sec = document.createElement('div');
+  sec.className = 'section-title';
+  sec.innerHTML = 'Overdue <span class="cnt">'+items.length+'</span>';
+  body.appendChild(sec);
+
+  items.forEach(t=>{
+    const daysLate = Math.round((REAL_TODAY - t.dueDate)/DAY);
+    const row = renderTaskRow(t);
+    const tagsEl = row.querySelector('.t-tags');
+    if(tagsEl){
+      const lateTag = document.createElement('span');
+      lateTag.className = 't-cls';
+      lateTag.style.color = 'var(--red)';
+      lateTag.style.borderColor = 'var(--red)';
+      lateTag.textContent = daysLate+'d overdue';
+      tagsEl.appendChild(lateTag);
+    }
+    body.appendChild(row);
+  });
+}
+
+// ============================================================================
 // GLOBAL RENDER + INIT
 // ============================================================================
 function render(){
@@ -690,6 +1107,8 @@ function render(){
   document.getElementById('statNextLbl').textContent = next ? ('IN '+Math.round((toDate(next.date)-REAL_TODAY)/DAY)+' DAYS') : 'NO TESTS LEFT';
   renderToday();
   renderTests();
+  if(document.getElementById('tab-catchup').style.display !== 'none') renderCatchup();
+  if(document.getElementById('tab-backlog').style.display !== 'none') renderBacklog();
 }
 
 document.getElementById('prevDay').onclick = ()=>{ viewDate = addDays(viewDate,-1); renderToday(); };
@@ -703,6 +1122,10 @@ document.querySelectorAll('.tab').forEach(tab=>{
     tab.classList.add('active');
     document.getElementById('tab-today').style.display = tab.dataset.tab==='today' ? '' : 'none';
     document.getElementById('tab-tests').style.display = tab.dataset.tab==='tests' ? '' : 'none';
+    document.getElementById('tab-catchup').style.display = tab.dataset.tab==='catchup' ? '' : 'none';
+    document.getElementById('tab-backlog').style.display = tab.dataset.tab==='backlog' ? '' : 'none';
+    if(tab.dataset.tab==='catchup') renderCatchup();
+    if(tab.dataset.tab==='backlog') renderBacklog();
   };
 });
 
@@ -713,4 +1136,3 @@ document.querySelectorAll('.tab').forEach(tab=>{
 </script>
 </body>
 </html>
-
