@@ -186,7 +186,7 @@
     <div id="backlogBody"></div>
   </div>
 
-  <footer>Aakash Test Planner · Carry Forward &amp; One Year Medical · Batch window 17 Mar – 1 Apr 2026<br>Adaptive daily plan recomputed each time you open this page — anything left undone rolls forward.<br><span style="opacity:.6">Build 2026-09-06-c · dynamic prereq gate fix</span></footer>
+  <footer>Aakash Test Planner · Carry Forward &amp; One Year Medical · Batch window 17 Mar – 1 Apr 2026<br>Adaptive daily plan recomputed each time you open this page — anything left undone rolls forward.<br><span style="opacity:.6">Build 2026-09-06-d · localStorage fallback + no-reshuffle fix</span></footer>
 </div>
 
 <script>
@@ -778,17 +778,58 @@ const REAL_TODAY = midnight(new Date());
 const PLAN_END = TESTS.reduce((m,t)=> toDate(t.date)>m?toDate(t.date):m, toDate(TESTS[0].date));
 const SPACED_INTERVALS = [1,3,7,16,35];
 
+const LS_KEY = 'neet-daily-planner-progress';
+function hasWindowStorage(){
+  try { return typeof window!=='undefined' && !!window.storage && typeof window.storage.get==='function'; }
+  catch(e){ return false; }
+}
 async function loadProgress(){
-  try{ const r = await window.storage.get('daily-progress'); progress = r&&r.value ? JSON.parse(r.value) : {}; }
+  // window.storage only exists inside Claude.ai's own artifact viewer. On a real deployed page
+  // (GitHub Pages, opened locally, etc.) it doesn't exist at all, and every save/load silently
+  // no-ops — which is exactly what caused completed tasks to vanish on refresh. localStorage is
+  // the correct mechanism for a genuinely standalone deployed page, so fall back to it whenever
+  // window.storage isn't actually available.
+  if(hasWindowStorage()){
+    try{ const r = await window.storage.get('daily-progress'); progress = r&&r.value ? JSON.parse(r.value) : {}; return; }
+    catch(e){ /* fall through to localStorage below */ }
+  }
+  try{ const raw = localStorage.getItem(LS_KEY); progress = raw ? JSON.parse(raw) : {}; }
   catch(e){ progress = {}; }
 }
-async function saveProgress(){ try{ await window.storage.set('daily-progress', JSON.stringify(progress)); }catch(e){} }
+async function saveProgress(){
+  if(hasWindowStorage()){
+    try{ await window.storage.set('daily-progress', JSON.stringify(progress)); return; }
+    catch(e){ /* fall through to localStorage below */ }
+  }
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(progress)); }
+  catch(e){ /* last resort: progress stays in-memory for this tab only */ }
+}
 
 function allTasks(){ return buildTasks(REAL_TODAY, progress); }
 function pendingTasks(){
   const core = allTasks();
   const bioFiller = buildBioRevisionFiller(progress, REAL_TODAY, PLAN_END);
   return core.concat(bioFiller).filter(t=>!(progress[t.id]&&progress[t.id].done));
+}
+
+// The full plan is expensive-ish to recompute and, more importantly, recomputing it on every
+// single checkbox click was causing a bad bug: finishing one task frees up a bit of today's
+// capacity, and the "fill spare capacity" mechanism would immediately backfill it by pulling
+// something from a nearby future day into TODAY — so the list kept reshuffling as you worked
+// through it. Caching for the session fixes this: a completed task just gets its strikethrough
+// (still checked live against `progress` at render time), nothing new gets pulled in. Only a
+// genuinely structural change (Catch-up) explicitly invalidates the cache; a fresh page load
+// always recomputes from scratch anyway since REAL_TODAY is fixed at load time.
+let cachedSchedule = null;
+let cachedScheduleDate = null;
+function invalidateSchedule(){ cachedSchedule = null; }
+function getSchedule(){
+  const todayKey = fmt(REAL_TODAY);
+  if(!cachedSchedule || cachedScheduleDate !== todayKey){
+    cachedSchedule = schedule(pendingTasks(), REAL_TODAY, PLAN_END);
+    cachedScheduleDate = todayKey;
+  }
+  return cachedSchedule;
 }
 
 function toggleTask(id, checked){
@@ -830,7 +871,7 @@ const TYPE_META = {
 };
 
 function renderToday(){
-  const sched = schedule(pendingTasks(), REAL_TODAY, PLAN_END);
+  const sched = getSchedule();
   const key = fmt(viewDate);
   const items = (sched[key]||[]).slice().sort((a,b)=> (a.subject||'').localeCompare(b.subject||''));
 
@@ -991,6 +1032,7 @@ function setChapterDone(entry, done){
     if(done) progress[id] = {done:true, completedDate: fmt(REAL_TODAY)};
     else delete progress[id];
   });
+  invalidateSchedule();
 }
 
 function renderCatchup(){
