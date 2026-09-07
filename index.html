@@ -136,6 +136,7 @@
     <button class="tab" data-tab="tests">Test Calendar</button>
     <button class="tab" data-tab="catchup">Catch-up</button>
     <button class="tab" data-tab="backlog">Backlog</button>
+    <button class="tab" data-tab="workout">Workout</button>
   </div>
 
   <div id="tab-today">
@@ -184,6 +185,13 @@
   <div id="tab-backlog" style="display:none;">
     <div class="banner info">Anything whose original due date has already passed but isn't checked off yet — the planner keeps rolling these forward automatically, but this is the one place to see them all at a glance and catch up.</div>
     <div id="backlogBody"></div>
+  </div>
+
+  <div id="tab-workout" style="display:none;">
+    <div class="banner info">Bodyweight-only, scales from 15 to 60 minutes — a "sleeper build" focus: strength and stamina without needing a gym, plus a mobility/breathing finisher for focus. Sits outside your study-hour budget, same as the wind-down block.</div>
+    <div class="filters" id="woDuration"></div>
+    <div id="woStreakRow" style="margin-bottom:14px;"></div>
+    <div id="woBody"></div>
   </div>
 
   <footer>Aakash Test Planner · Carry Forward &amp; One Year Medical · Batch window 17 Mar – 1 Apr 2026<br>Adaptive daily plan recomputed each time you open this page — anything left undone rolls forward.<br><span style="opacity:.6">Build 2026-09-06-d · localStorage fallback + no-reshuffle fix</span></footer>
@@ -861,6 +869,344 @@ function computeStats(){
 }
 
 // ============================================================================
+// WORKOUT — bodyweight, scales 15/30/45/60 min, "sleeper build" focus,
+// plus a 1-5 difficulty LEVEL that auto-adjusts from your rolling completion rate.
+// ============================================================================
+const WORKOUT_DURATIONS = [15,30,45,60];
+const WO_MIN_LEVEL = 1, WO_MAX_LEVEL = 5;
+const WO_ROLLING_WINDOW_DAYS = 14;   // how far back the rolling completion check looks
+const WO_MIN_SAMPLE_DAYS = 4;        // don't adjust level until we've seen at least this many scheduled workout days
+const WO_LEVEL_UP_RATE = 0.85;       // completing >=85% of exercises over the window -> level up
+const WO_LEVEL_DOWN_RATE = 0.40;     // completing <=40% -> level down
+
+// Reps/hold-time multiplier and bonus rounds per level. "Both together, gradually."
+const LEVEL_MULT = {1:1.0, 2:1.15, 3:1.30, 4:1.45, 5:1.60};
+const LEVEL_ROUND_BONUS = {1:0, 2:0, 3:1, 4:1, 5:2};
+
+// Rounds of the main circuit for each duration bucket, per day-type (before the level bonus above).
+const WO_ROUNDS = {
+  strength: {15:2, 30:3, 45:4, 60:5},
+  hiit:     {15:2, 30:4, 45:5, 60:6},
+};
+// Extra minutes of the optional walk on the mobility day, per duration bucket.
+const WO_WALK_MIN = {15:0, 30:10, 45:15, 60:20};
+
+function scaleAmount(unit, base, level){
+  const mult = LEVEL_MULT[level] || 1;
+  if(unit==='sec' || unit==='sec_side'){
+    return Math.round((base*mult)/5)*5; // round hold times to nearest 5s
+  }
+  return Math.max(base, Math.round(base*mult)); // reps: round to nearest whole
+}
+function variantName(ex, level){
+  if(!ex.variants) return ex.name;
+  let name = ex.name;
+  Object.keys(ex.variants).map(Number).sort((a,b)=>a-b).forEach(threshold=>{
+    if(level >= threshold) name = ex.variants[threshold];
+  });
+  return name;
+}
+function exerciseLabel(ex, level){
+  const name = variantName(ex, level);
+  const amt = ex.amount!=null ? scaleAmount(ex.unit, ex.amount, level) : null;
+  switch(ex.unit){
+    case 'reps': return name+' x'+amt;
+    case 'reps_side': return name+' x'+amt+'/side';
+    case 'sec': return name+' — '+amt+'s';
+    case 'sec_side': return name+' — '+amt+'s/side';
+    case 'work_sec': return name+' — '+amt+'s';
+    default: return name;
+  }
+}
+
+// getDay(): 0=Sun..6=Sat
+const WORKOUT_DAYS = {
+  1: { type:'strength', title:'Push & Core', emoji:'💪',
+    warmup: ['Arm circles — 20s each way','Torso twists x20','Jumping jacks x30'],
+    circuit: [
+      {name:'Push-ups (knees down is fine)', amount:12, unit:'reps', variants:{3:'Push-ups (strict, full range)',5:'Decline push-ups (feet elevated)'}},
+      {name:'Pike push-ups', amount:10, unit:'reps'},
+      {name:'Plank shoulder taps', amount:20, unit:'reps'},
+      {name:'Chair/bed-edge tricep dips', amount:12, unit:'reps'},
+      {name:'Plank hold', amount:30, unit:'sec', variants:{4:'Plank hold (hands, not forearms)'}},
+    ],
+    finisher: [{name:'Bicycle crunches', amount:20, unit:'reps'}],
+    cooldown: ['Chest & shoulder stretch — 45s each side'] },
+  2: { type:'strength', title:'Legs & Glutes', emoji:'🦵',
+    warmup: ['Bodyweight squats x15 (slow)','Leg swings — 10 each leg'],
+    circuit: [
+      {name:'Bodyweight squats', amount:20, unit:'reps', variants:{3:'Bodyweight squats (3s pause at bottom)'}},
+      {name:'Reverse lunges', amount:10, unit:'reps_side'},
+      {name:'Glute bridges', amount:20, unit:'reps', variants:{4:'Single-leg glute bridges'}},
+      {name:'Wall sit', amount:30, unit:'sec'},
+      {name:'Calf raises', amount:20, unit:'reps'},
+    ],
+    finisher: [{name:'Split jump lunges', amount:10, unit:'reps_side'}],
+    cooldown: ['Quad stretch — 30s/side','Hamstring stretch — 30s/side'] },
+  3: { type:'hiit', title:'Cardio / HIIT', emoji:'🔥',
+    warmup: ['Light jog on the spot — 1 min'],
+    circuit: [
+      {name:'Jumping jacks', amount:30, unit:'work_sec'},
+      {name:'High knees', amount:30, unit:'work_sec'},
+      {name:'Mountain climbers', amount:30, unit:'work_sec', variants:{3:'Mountain climbers (fast tempo)'}},
+      {name:'Burpees (step-back is fine)', amount:30, unit:'work_sec', variants:{5:'Burpees + tuck jump'}},
+      {name:'Skater hops', amount:30, unit:'work_sec'},
+    ],
+    circuitNote: 'Rest ~15s between moves',
+    cooldown: ['Walk it off — 1 min','Standing forward-fold stretch — 30s'] },
+  4: { type:'strength', title:'Pull & Core (bodyweight)', emoji:'🎯',
+    warmup: ['Cat-cow x10','Shadow arm pulls — 20s'],
+    circuit: [
+      {name:'Superman raises', amount:15, unit:'reps'},
+      {name:'Reverse snow angels', amount:15, unit:'reps'},
+      {name:'Bird-dog', amount:10, unit:'reps_side'},
+      {name:'Dead bug', amount:10, unit:'reps_side'},
+      {name:'Plank hold', amount:30, unit:'sec'},
+    ],
+    finisher: [{name:'Side plank', amount:20, unit:'sec_side', variants:{4:'Side plank with hip dips'}}],
+    cooldown: ['Lower back stretch — 45s','Lat stretch — 30s/side'] },
+  5: { type:'strength', title:'Full-Body Strength', emoji:'⚡',
+    warmup: ['Jumping jacks x30','Bodyweight squats x10'],
+    circuit: [
+      {name:'Squats', amount:15, unit:'reps', variants:{3:'Squats (3s pause at bottom)',5:'Jump squats'}},
+      {name:'Push-ups (knees down is fine)', amount:12, unit:'reps', variants:{3:'Push-ups (strict, full range)',5:'Decline push-ups (feet elevated)'}},
+      {name:'Lunges', amount:10, unit:'reps_side'},
+      {name:'Plank hold', amount:30, unit:'sec'},
+      {name:'Glute bridges', amount:15, unit:'reps'},
+      {name:'Mountain climbers', amount:20, unit:'reps'},
+    ],
+    finisher: [{name:'Burpees', amount:10, unit:'reps', variants:{5:'Burpees + push-up'}}],
+    cooldown: ['Full-body stretch flow — 1 min'] },
+  6: { type:'mobility', title:'Mobility & Focus', emoji:'🧘',
+    warmup: [],
+    circuit: ["Cat-cow x10","World's greatest stretch — 5/side",'Hip flexor stretch — 30s/side','Dead bug x10/side',"Child's pose — 30s"],
+    cooldown: ['Slow breathing (4s in, 6s out) — 2 min'] },
+  0: { type:'rest', title:'Rest Day', emoji:'😴', circuit: [] },
+};
+
+function woDayFor(date){ return WORKOUT_DAYS[date.getDay()]; }
+
+function woSettings(){
+  return progress.__workoutSettings || {duration:30, level:1, lastLevelCheckDate:null, pausedRanges:[]};
+}
+function getWorkoutDuration(){
+  const v = woSettings().duration;
+  return WORKOUT_DURATIONS.includes(v) ? v : 30;
+}
+function setWorkoutDuration(v){
+  progress.__workoutSettings = Object.assign({}, woSettings(), {duration:v});
+  saveProgress(); renderWorkout();
+}
+
+// Pause covers a DATE RANGE (not just "today"), so exam days you never open the app on
+// still get correctly excluded once you resume and it looks back over the window.
+function woIsPaused(dateStr){
+  const ranges = woSettings().pausedRanges || [];
+  return ranges.some(r => dateStr >= r.start && (r.end===null || dateStr <= r.end));
+}
+function woIsPausedToday(){ return woIsPaused(fmt(REAL_TODAY)); }
+function woStartPause(){
+  const s = woSettings();
+  const ranges = (s.pausedRanges||[]).slice();
+  ranges.push({start: fmt(REAL_TODAY), end: null});
+  progress.__workoutSettings = Object.assign({}, s, {pausedRanges: ranges});
+  saveProgress(); renderWorkout();
+}
+function woEndPause(){
+  const s = woSettings();
+  const ranges = (s.pausedRanges||[]).slice();
+  const open = ranges.find(r=>r.end===null);
+  if(open){
+    const yesterday = fmt(addDays(REAL_TODAY,-1));
+    if(yesterday < open.start){
+      // Started and resumed on the same day — it never actually covered a full day, drop it.
+      ranges.splice(ranges.indexOf(open),1);
+    } else {
+      open.end = yesterday; // end BEFORE today, so today is unpaused immediately on resume
+    }
+  }
+  progress.__workoutSettings = Object.assign({}, s, {pausedRanges: ranges});
+  saveProgress(); renderWorkout();
+}
+
+function woExerciseId(date, idx){ return 'WO::'+fmt(date)+'::'+idx; }
+
+// Builds today's checklist for a given day-type/duration/level. Rest and mobility days
+// ignore `level` — mobility/recovery work isn't something you need to progressively overload.
+function buildWorkoutList(day, duration, level){
+  const items = [];
+  if(day.type==='rest'){
+    items.push({label:'Rest day — legs (and everything else) recover today. A short walk if you feel like it is optional, not required.'});
+    return items;
+  }
+  (day.warmup||[]).forEach(e=> items.push({label:e, section:'Warm-up'}));
+  if(day.type==='mobility'){
+    day.circuit.forEach(e=> items.push({label:e, section:'Routine'}));
+    const walk = WO_WALK_MIN[duration];
+    if(walk>0) items.push({label:'Optional brisk walk — '+walk+' min', section:'Routine'});
+  } else {
+    const rounds = Math.min(WO_ROUNDS[day.type][duration] + (LEVEL_ROUND_BONUS[level]||0), 7);
+    for(let r=1;r<=rounds;r++){
+      day.circuit.forEach(ex=> items.push({label:exerciseLabel(ex, level), section:'Main circuit — round '+r+' of '+rounds}));
+    }
+    if(duration>=45 && day.finisher) day.finisher.forEach(ex=> items.push({label:exerciseLabel(ex, level), section:'Finisher'}));
+  }
+  (day.cooldown||[]).forEach(e=> items.push({label:e, section:'Cooldown'}));
+  return items;
+}
+
+// Looks back WO_ROLLING_WINDOW_DAYS (excluding today, since it's not finished yet) across
+// scheduled (non-rest, non-paused) workout days, and returns how much of each day's checklist
+// got done. Days inside a pause range (exam days, etc.) are skipped entirely — they never
+// count for or against the rolling rate. Uses TODAY's duration/level to reconstruct past days'
+// checklist length — an approximation, but duration/level rarely change day-to-day so it stays
+// close enough for a rolling trend.
+function woRollingStats(duration, level){
+  let totalItems = 0, totalDone = 0, scheduledDays = 0;
+  for(let back=1; back<=WO_ROLLING_WINDOW_DAYS; back++){
+    const d = addDays(REAL_TODAY, -back);
+    const day = woDayFor(d);
+    if(day.type==='rest' || woIsPaused(fmt(d))) continue;
+    const items = buildWorkoutList(day, duration, level);
+    const done = items.filter((_,i)=> progress[woExerciseId(d,i)] && progress[woExerciseId(d,i)].done).length;
+    totalItems += items.length; totalDone += done; scheduledDays++;
+  }
+  const rate = totalItems>0 ? totalDone/totalItems : null;
+  return {rate, scheduledDays};
+}
+
+// Auto-adjusts the level at most once per calendar day (so it never shifts mid-session),
+// based on the rolling completion rate over the trailing window.
+function getWorkoutLevel(){
+  const s = woSettings();
+  let level = [1,2,3,4,5].includes(s.level) ? s.level : 1;
+  const todayKey = fmt(REAL_TODAY);
+  if(s.lastLevelCheckDate === todayKey) return level;
+
+  const {rate, scheduledDays} = woRollingStats(getWorkoutDuration(), level);
+  let reason = null;
+  if(scheduledDays >= WO_MIN_SAMPLE_DAYS && rate!=null){
+    if(rate >= WO_LEVEL_UP_RATE && level < WO_MAX_LEVEL){ level++; reason = 'up'; }
+    else if(rate <= WO_LEVEL_DOWN_RATE && level > WO_MIN_LEVEL){ level--; reason = 'down'; }
+  }
+  progress.__workoutSettings = Object.assign({}, s, {level, lastLevelCheckDate: todayKey});
+  saveProgress();
+  return level;
+}
+
+function computeWorkoutStreak(){
+  const duration = getWorkoutDuration(), level = getWorkoutLevel();
+  let streak = 0, d = new Date(REAL_TODAY);
+  while(true){
+    const day = woDayFor(d);
+    if(day.type==='rest' || woIsPaused(fmt(d))){ d = addDays(d,-1); continue; } // rest/paused days don't break the streak
+    const items = buildWorkoutList(day, duration, level);
+    const allDone = items.length>0 && items.every((_,i)=> progress[woExerciseId(d,i)] && progress[woExerciseId(d,i)].done);
+    if(!allDone) break;
+    streak++; d = addDays(d,-1);
+  }
+  return streak;
+}
+
+function renderWorkout(){
+  const durWrap = document.getElementById('woDuration');
+  durWrap.innerHTML = '';
+  const duration = getWorkoutDuration();
+  WORKOUT_DURATIONS.forEach(v=>{
+    const chip = document.createElement('button');
+    chip.className = 'chip'+(v===duration?' active':'');
+    chip.textContent = v+' min';
+    chip.onclick = ()=> setWorkoutDuration(v);
+    durWrap.appendChild(chip);
+  });
+  const paused = woIsPausedToday();
+  const pauseBtn = document.createElement('button');
+  pauseBtn.className = 'chip'+(paused?' active':'');
+  pauseBtn.style.marginLeft = 'auto';
+  pauseBtn.textContent = paused ? '▶ Resume workouts' : '⏸ Pause (exams)';
+  pauseBtn.onclick = ()=> paused ? woEndPause() : woStartPause();
+  durWrap.appendChild(pauseBtn);
+
+  const level = getWorkoutLevel();
+  const day = woDayFor(REAL_TODAY);
+  const items = buildWorkoutList(day, duration, level);
+  const doneCount = items.filter((_,i)=> progress[woExerciseId(REAL_TODAY,i)] && progress[woExerciseId(REAL_TODAY,i)].done).length;
+  const streak = computeWorkoutStreak();
+
+  document.getElementById('woStreakRow').innerHTML =
+    '<div class="stat-row"><div class="stat"><div class="num">'+day.emoji+' '+day.title+'</div><div class="lbl">TODAY\'S FOCUS</div></div>'+
+    '<div class="stat"><div class="num">'+doneCount+'/'+items.length+'</div><div class="lbl">DONE TODAY</div></div>'+
+    '<div class="stat streak"><div class="num">'+streak+'</div><div class="lbl">DAY STREAK</div></div>'+
+    (day.type!=='rest' && day.type!=='mobility' ? '<div class="stat"><div class="num">Lv '+level+'</div><div class="lbl">DIFFICULTY</div></div>' : '')+
+    '</div>';
+
+  const body = document.getElementById('woBody');
+  body.innerHTML = '';
+
+  if(paused){
+    const pb = document.createElement('div');
+    pb.className = 'banner warn';
+    pb.textContent = '⏸ Paused since '+ ((woSettings().pausedRanges||[]).slice().reverse().find(r=>r.end===null)||{}).start +' — today (and every day until you resume) is fully excluded from your rolling completion rate and difficulty level. Optional exercises below, do them or don\'t, nothing here counts either way.';
+    body.appendChild(pb);
+  }
+
+  if(day.type!=='rest' && day.type!=='mobility'){
+    const {rate, scheduledDays} = woRollingStats(duration, level);
+    const banner = document.createElement('div');
+    banner.className = 'banner';
+    if(scheduledDays < WO_MIN_SAMPLE_DAYS){
+      banner.classList.add('empty'); banner.style.textAlign='left'; banner.style.padding='12px 14px';
+      banner.textContent = 'Level '+level+' — still building up your completion history ('+scheduledDays+'/'+WO_MIN_SAMPLE_DAYS+' workout days logged) before the difficulty starts auto-adjusting.';
+    } else {
+      const pct = Math.round(rate*100);
+      banner.classList.add(rate>=WO_LEVEL_UP_RATE ? 'info' : (rate<=WO_LEVEL_DOWN_RATE ? 'warn' : 'info'));
+      banner.textContent = 'Level '+level+' — '+pct+'% completed over your last '+scheduledDays+' workout days'+(paused?' (excluding paused days)':'')+'. '+
+        (rate>=WO_LEVEL_UP_RATE ? "You're crushing it — expect a bump up soon if this keeps up." :
+         rate<=WO_LEVEL_DOWN_RATE ? "Struggling to finish lately — this will ease down a level to keep it sustainable." :
+         'Right in the sustainable zone — holding steady here.');
+    }
+    body.appendChild(banner);
+  }
+
+  if(day.type==='rest'){
+    const rest = document.createElement('div');
+    rest.className = 'banner empty';
+    rest.innerHTML = day.emoji+' '+day.title+'<br><span style="font-size:11.5px;">'+items[0].label+'</span>';
+    body.appendChild(rest);
+    return;
+  }
+
+  if(day.circuitNote){
+    const note = document.createElement('div');
+    note.style.cssText = 'font-size:11.5px;color:var(--muted);margin:0 0 10px;';
+    note.textContent = day.circuitNote;
+    body.appendChild(note);
+  }
+
+  let lastSection = null;
+  items.forEach((item,i)=>{
+    if(item.section !== lastSection){
+      const head = document.createElement('div');
+      head.className = 'section-title';
+      head.textContent = item.section;
+      body.appendChild(head);
+      lastSection = item.section;
+    }
+    const id = woExerciseId(REAL_TODAY,i);
+    const done = !!(progress[id] && progress[id].done);
+    const row = document.createElement('label');
+    row.className = 'task'+(done?' done':'');
+    row.innerHTML = '<input type="checkbox" '+(done?'checked':'')+'><div class="t-body"><div class="t-label">'+item.label+'</div></div>';
+    row.querySelector('input').addEventListener('change', e=>{
+      if(e.target.checked) progress[id] = {done:true, completedDate: fmt(REAL_TODAY)};
+      else delete progress[id];
+      saveProgress(); renderWorkout();
+    });
+    body.appendChild(row);
+  });
+}
+
+// ============================================================================
 // RENDER — Today tab
 // ============================================================================
 const TYPE_META = {
@@ -1151,6 +1497,7 @@ function render(){
   renderTests();
   if(document.getElementById('tab-catchup').style.display !== 'none') renderCatchup();
   if(document.getElementById('tab-backlog').style.display !== 'none') renderBacklog();
+  if(document.getElementById('tab-workout').style.display !== 'none') renderWorkout();
 }
 
 document.getElementById('prevDay').onclick = ()=>{ viewDate = addDays(viewDate,-1); renderToday(); };
@@ -1166,8 +1513,10 @@ document.querySelectorAll('.tab').forEach(tab=>{
     document.getElementById('tab-tests').style.display = tab.dataset.tab==='tests' ? '' : 'none';
     document.getElementById('tab-catchup').style.display = tab.dataset.tab==='catchup' ? '' : 'none';
     document.getElementById('tab-backlog').style.display = tab.dataset.tab==='backlog' ? '' : 'none';
+    document.getElementById('tab-workout').style.display = tab.dataset.tab==='workout' ? '' : 'none';
     if(tab.dataset.tab==='catchup') renderCatchup();
     if(tab.dataset.tab==='backlog') renderBacklog();
+    if(tab.dataset.tab==='workout') renderWorkout();
   };
 });
 
