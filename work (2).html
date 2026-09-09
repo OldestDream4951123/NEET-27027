@@ -1,0 +1,2573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEET 2027 · Daily Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E14; --surface:#111826; --surface-2:#161F30; --border:#212B3B;
+    --text:#E8ECF3; --muted:#7C8797; --muted-2:#576073;
+    --physics:#5B8CFF; --chemistry:#3ED9C4; --botany:#7FD858; --zoology:#FF9A62;
+    --amber:#F2B84B; --red:#FF6B6B; --purple:#B18CFF; --done:#3A4658;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  ::selection{background:rgba(242,184,75,0.25);}
+  .wrap{max-width:920px;margin:0 auto;padding:24px 16px 90px;}
+
+  .hero{position:relative;padding-bottom:18px;margin-bottom:6px;border-bottom:1px solid var(--border);}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:10px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:28px;letter-spacing:-0.01em;margin:0 0 6px;}
+  .sub{color:var(--muted);font-size:13.5px;margin:0 0 20px;line-height:1.5;}
+
+  .stat-row{display:flex;gap:12px;flex-wrap:wrap;}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 15px;flex:1;min-width:120px;}
+  .stat .num{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:20px;line-height:1;}
+  .stat .lbl{color:var(--muted);font-size:10.5px;margin-top:6px;letter-spacing:.02em;}
+  .stat.streak .num{color:var(--amber);}
+  .progress-track{margin-top:14px;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--physics),var(--botany));border-radius:99px;transition:width .4s ease;}
+
+  /* Tabs */
+  .tabs{display:flex;gap:6px;margin:22px 0 18px;border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{font-family:'JetBrains Mono',monospace;font-size:12.5px;padding:9px 4px;margin-right:18px;background:none;border:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;letter-spacing:.03em;flex-shrink:0;white-space:nowrap;}
+  .tab.active{color:var(--text);border-bottom-color:var(--amber);}
+
+  /* Day nav */
+  .daynav{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .navbtn{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .navbtn:hover{border-color:var(--muted-2);}
+  .daydate{flex:1;text-align:center;}
+  .daydate .dow{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
+  .daydate .full{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;}
+  .todaybtn{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--surface-2);border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:8px 10px;cursor:pointer;}
+  .todaybtn:hover{color:var(--text);}
+  .datepick{background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:7px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;}
+
+  .banner{border-radius:10px;padding:12px 14px;font-size:12.5px;margin-bottom:14px;line-height:1.5;border:1px solid;}
+  .banner.warn{background:rgba(242,184,75,0.08);border-color:rgba(242,184,75,0.3);color:#F2B84B;}
+  .banner.info{background:rgba(91,140,255,0.08);border-color:rgba(91,140,255,0.28);color:#9DB6FF;}
+  .banner.empty{background:var(--surface);border-color:var(--border);color:var(--muted);text-align:center;padding:30px 14px;}
+
+  .section-title{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px;display:flex;align-items:center;gap:8px;}
+  .section-title .cnt{background:var(--surface-2);padding:1px 7px;border-radius:99px;font-size:10px;}
+
+  .task{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:7px;cursor:pointer;}
+  .task:hover{border-color:var(--muted-2);}
+  .task input{margin-top:2px;width:16px;height:16px;accent-color:var(--amber);cursor:pointer;flex-shrink:0;}
+  .task.done{opacity:.5;}
+  .task.done .t-label{text-decoration:line-through;text-decoration-color:var(--muted-2);}
+  .t-body{flex:1;min-width:0;}
+  .t-tags{display:flex;gap:6px;align-items:center;margin-bottom:3px;flex-wrap:wrap;}
+  .t-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  .t-subj{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  .t-type{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.05em;padding:1px 6px;border-radius:5px;text-transform:uppercase;}
+  .t-type.new{background:rgba(91,140,255,0.15);color:var(--physics);}
+  .t-type.revise{background:rgba(126,216,88,0.13);color:var(--botany);}
+  .t-type.mock{background:rgba(242,184,75,0.15);color:var(--amber);}
+  .t-type.qs{background:rgba(62,217,196,0.15);color:var(--chemistry);}
+  .t-type.fullmock{background:rgba(255,107,107,0.15);color:var(--red);}
+  .t-type.biorev{background:rgba(127,216,88,0.13);color:var(--botany);}
+  .t-cls{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted-2);border:1px solid var(--border);border-radius:5px;padding:1px 5px;}
+  .t-label{font-size:13.5px;line-height:1.4;color:var(--text);}
+
+  .chip-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
+  .review-chip{display:flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:5px 11px 5px 8px;font-size:11.5px;cursor:pointer;color:var(--muted);}
+  .review-chip:hover{border-color:var(--purple);}
+  .review-chip input{width:12px;height:12px;accent-color:var(--purple);cursor:pointer;}
+  .review-chip.done{opacity:.45;text-decoration:line-through;}
+  .review-chip .rlbl{color:var(--text);}
+
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;}
+  .chip{font-family:'JetBrains Mono',monospace;font-size:11.5px;padding:6px 12px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;}
+  .chip:hover{color:var(--text);border-color:var(--muted-2);}
+  .chip.active{background:var(--surface-2);color:var(--text);border-color:var(--muted-2);}
+
+  .info-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-top:26px;}
+  .info-box summary{cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14.5px;list-style:none;display:flex;align-items:center;justify-content:space-between;}
+  .info-box summary::-webkit-details-marker{display:none;}
+  .info-box summary .arrow{font-size:12px;color:var(--muted);transition:transform .15s ease;}
+  .info-box[open] summary .arrow{transform:rotate(90deg);}
+  .info-box .body{margin-top:14px;font-size:13px;color:var(--muted);line-height:1.65;}
+  .info-box .body b{color:var(--text);}
+  .info-box .body ul{margin:8px 0;padding-left:18px;}
+  .info-box .body li{margin-bottom:6px;}
+
+  /* Test calendar tab */
+  .test-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+  .test-card.past{opacity:.5;}
+  .test-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
+  .test-id{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14.5px;}
+  .test-tag{font-family:'JetBrains Mono',monospace;font-size:9.5px;padding:2px 7px;border-radius:5px;background:var(--surface-2);color:var(--muted);text-transform:uppercase;margin-left:8px;}
+  .test-date{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-align:right;}
+  .test-due{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--amber);margin-top:6px;}
+  .test-chapters{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6;}
+  .test-chapters b{color:var(--text);font-weight:500;}
+
+  .catchup-subject{margin-bottom:22px;}
+  .catchup-bulk{display:flex;gap:8px;margin-bottom:10px;}
+  .catchup-bulk select{flex:1;min-width:0;}
+  .empty{text-align:center;color:var(--muted);padding:50px 20px;font-size:13px;}
+  .leisure-block{margin-top:18px;padding:12px 14px;border-radius:10px;background:rgba(177,140,255,0.08);border:1px dashed rgba(177,140,255,0.35);color:var(--muted);font-size:12.5px;line-height:1.5;}
+  .leisure-block b{color:var(--purple);}
+  footer{text-align:center;color:var(--muted-2);font-size:11px;margin-top:36px;font-family:'JetBrains Mono',monospace;line-height:1.7;}
+
+  /* Analytics */
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:22px;}
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12.5px;}
+  .bar-label{width:110px;flex-shrink:0;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .bar-track{flex:1;height:16px;background:var(--surface-2);border-radius:5px;overflow:hidden;position:relative;}
+  .bar-fill{height:100%;border-radius:5px;}
+  .bar-value{width:56px;flex-shrink:0;text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);}
+
+  /* Mistake log */
+  .mistake-form{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:18px;display:grid;gap:9px;}
+  .mistake-form select, .mistake-form textarea, .mistake-form input{background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 10px;font-family:'Inter',sans-serif;font-size:13px;width:100%;}
+  .mistake-form textarea{resize:vertical;min-height:50px;}
+  .mistake-form .row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  .mistake-form button{background:var(--amber);color:#1a1305;border:none;border-radius:8px;padding:10px;font-weight:600;font-size:13px;cursor:pointer;}
+  .mistake-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:8px;}
+  .mistake-item .mi-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px;}
+  .mistake-item .mi-tag{font-family:'JetBrains Mono',monospace;font-size:9.5px;padding:2px 7px;border-radius:5px;text-transform:uppercase;}
+  .mi-tag.silly{background:rgba(242,184,75,0.15);color:var(--amber);}
+  .mi-tag.concept{background:rgba(255,107,107,0.15);color:var(--red);}
+  .mi-tag.calc{background:rgba(91,140,255,0.15);color:var(--physics);}
+  .mi-tag.misread{background:rgba(177,140,255,0.15);color:var(--purple);}
+  .mi-tag.time{background:rgba(62,217,196,0.15);color:var(--chemistry);}
+  .mi-tag.other{background:var(--surface-2);color:var(--muted);}
+  .mistake-item .mi-del{background:none;border:none;color:var(--muted-2);cursor:pointer;font-size:14px;}
+  .mistake-item .mi-note{font-size:12.5px;color:var(--text);line-height:1.5;}
+  .mistake-item .mi-meta{font-size:10.5px;color:var(--muted);margin-top:4px;}
+
+  /* Quiz */
+  #quizOverlay{position:fixed;inset:0;background:rgba(5,7,11,0.85);backdrop-filter:blur(3px);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;}
+  #quizModal{background:var(--bg);border:1px solid var(--border);border-radius:16px;max-width:640px;width:100%;max-height:88vh;overflow-y:auto;padding:20px;}
+  #quizHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;position:sticky;top:-20px;background:var(--bg);padding:4px 0 10px;}
+  #quizHeader .qz-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;}
+  #quizHeader .qz-timer{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;padding:5px 12px;border-radius:8px;background:var(--surface-2);}
+  #quizHeader .qz-timer.low{color:var(--red);background:rgba(255,107,107,0.12);}
+  .qz-question{margin-bottom:20px;}
+  .qz-qtext{font-size:13.5px;margin-bottom:10px;line-height:1.5;}
+  .qz-opt{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;border:1px solid var(--border);margin-bottom:6px;cursor:pointer;font-size:13px;}
+  .qz-opt:hover{border-color:var(--muted-2);}
+  .qz-opt.selected{border-color:var(--amber);background:rgba(242,184,75,0.08);}
+  .qz-opt.correct{border-color:var(--botany);background:rgba(126,216,88,0.1);}
+  .qz-opt.incorrect{border-color:var(--red);background:rgba(255,107,107,0.1);}
+  .qz-opt input{accent-color:var(--amber);}
+  #quizFooter{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;position:sticky;bottom:-20px;background:var(--bg);padding:12px 0 4px;}
+  #quizFooter button{border-radius:9px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;border:none;}
+  .qz-btn-primary{background:var(--amber);color:#1a1305;}
+  .qz-btn-secondary{background:var(--surface-2);color:var(--text);border:1px solid var(--border) !important;}
+  .qz-score-banner{text-align:center;padding:20px;border-radius:12px;margin-bottom:16px;background:var(--surface-2);}
+  .qz-score-banner .qz-pct{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;}
+  .qz-score-banner .qz-sub{font-size:12px;color:var(--muted);margin-top:4px;}
+  .qz-score-banner.good{background:rgba(126,216,88,0.1);}
+  .qz-score-banner.good .qz-pct{color:var(--botany);}
+  .qz-score-banner.mid{background:rgba(242,184,75,0.1);}
+  .qz-score-banner.mid .qz-pct{color:var(--amber);}
+  .qz-score-banner.bad{background:rgba(255,107,107,0.1);}
+  .qz-score-banner.bad .qz-pct{color:var(--red);}
+  #quizBody.submitted .qz-opt{cursor:default;pointer-events:none;}
+  .qz-missed-actions{margin-top:6px;}
+  .qz-log-btn{background:var(--surface-2);border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:4px 9px;font-size:11px;cursor:pointer;}
+  .qz-log-btn:hover{color:var(--text);border-color:var(--muted-2);}
+  .qz-log-btn.logged{opacity:.45;pointer-events:none;}
+  .qz-explain{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5;}
+  .quiz-setup-row{display:flex;gap:9px;margin-bottom:0;}
+  .quiz-setup-row select, .quiz-setup-row input{flex:1;min-width:0;}
+  .quiz-avail{font-size:11px;color:var(--muted-2);margin-top:-2px;}
+  .quiz-history-row{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .quiz-history-score{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;}
+
+  /* Priority */
+  .priority-row{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 12px;margin-bottom:6px;}
+  .priority-label{flex:1;font-size:13px;color:var(--text);min-width:0;}
+  .priority-btns{display:flex;gap:6px;flex-shrink:0;}
+  .reorder-btn{background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:13px;flex-shrink:0;}
+  .reorder-btn:hover:not(:disabled){border-color:var(--muted-2);}
+  .reorder-btn:disabled{opacity:.3;cursor:default;}
+  .priority-gate-toggle{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:14px;line-height:1.5;}
+  .priority-gate-toggle input{width:15px;height:15px;accent-color:var(--amber);flex-shrink:0;cursor:pointer;}
+  .priority-reset-btn{margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Phase-01 (CF + OYM) · 2026–2027 · Type-2 (B / D / F)</div>
+    <h1>NEET Daily Planner</h1>
+    <p class="sub">What to study <b style="color:var(--text)">today</b> — back-planned from your Aakash test dates, broken into bite-sized topics, with spaced revision built in. Check things off as you go; everything is saved automatically.</p>
+    <div class="stat-row">
+      <div class="stat"><div class="num" id="statProgress">0%</div><div class="lbl">SYLLABUS DONE</div></div>
+      <div class="stat streak"><div class="num" id="statStreak">0</div><div class="lbl">DAY STREAK</div></div>
+      <div class="stat"><div class="num" id="statNext">—</div><div class="lbl" id="statNextLbl">NEXT TEST</div></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="today">Today's Plan</button>
+    <button class="tab" data-tab="tests">Test Calendar</button>
+    <button class="tab" data-tab="catchup">Catch-up</button>
+    <button class="tab" data-tab="backlog">Backlog</button>
+    <button class="tab" data-tab="workout">Workout</button>
+    <button class="tab" data-tab="quiz">Quiz</button>
+    <button class="tab" data-tab="analytics">Analytics</button>
+    <button class="tab" data-tab="mistakes">Mistakes</button>
+    <button class="tab" data-tab="priority">Priority</button>
+  </div>
+
+  <div id="tab-today">
+    <div class="daynav">
+      <button class="navbtn" id="prevDay">‹</button>
+      <div class="daydate"><div class="dow" id="dayDow">—</div><div class="full" id="dayFull">—</div></div>
+      <button class="navbtn" id="nextDay">›</button>
+      <button class="todaybtn" id="jumpToday">Today</button>
+      <input type="date" class="datepick" id="datePick">
+    </div>
+
+    <div id="dayBanner"></div>
+    <div id="dayContent"></div>
+
+    <details class="info-box" id="whyBox">
+      <summary>Why this plan is built this way <span class="arrow">▸</span></summary>
+      <div class="body">
+        <ul>
+          <li><b>Real hour budgets, not abstract "load"</b> — 5-7h on weekdays, 8-12h on weekends, on top of coaching. Every task carries a realistic time estimate (a Physics/Chem sub-topic ≈1h, a whole Bio chapter ≈2.5h, a 20-question chunk ≈30min), so the day's plan is sized in actual hours you'll spend, not a vague unit.</li>
+          <li><b>All 86 chapters' first-time learning finishes by 1 Dec 2026</b> — every chapter, 11th and 12th, across all four subjects, is pulled forward to be <i>learned</i> by then regardless of when its own test would otherwise have allowed it. The 200-questions-per-chapter practice keeps running afterward via the daily question block, finishing naturally by around mid-to-late December — well before any AIATS actually needs it.</li>
+          <li><b>Class 11 : Class 12 in a 40:60 split</b> — whatever time is available for new-topic learning each day is divided this way, with either side able to use the other's leftover room rather than waste capacity.</li>
+          <li><b>Organic Chemistry, sequenced properly</b> — GOC, Hydrocarbons and Haloalkanes &amp; Haloarenes are prioritised first and must be genuinely finished before Alcohols/Phenols/Ethers, Aldehydes/Ketones/Carboxylic Acids, Amines or Biomolecules get pulled ahead of schedule — matching how the topics actually build on each other.</li>
+          <li><b>A reserved daily question-solving slot</b> — 1.5h on weekdays, 2h on weekends, ring-fenced so practice doesn't get crowded out by cramming new content.</li>
+          <li><b>Backward planning from test dates</b> — Practice Tests, Term Exams &amp; NRTs: topics finish 4 days before the test, then a self mock-test slot before you sit it. AIATS: everything is fully re-revised at least 10 days out, with 2 mock tests built in.</li>
+          <li><b>Bio revision, on a cycle</b> — once a Botany/Zoology chapter is marked done, it quietly resurfaces roughly every ~25 days as optional filler to help keep Biology accuracy high through NEET.</li>
+          <li><b>Spaced repetition</b> — once you check a topic off, light "quick revise" reminders resurface it at 1, 3, 7, 16 and 35 days later (the classic Ebbinghaus forgetting-curve spacing), rather than reading something once and never touching it again.</li>
+          <li><b>Active recall over re-reading</b> — mock tests and per-chapter question practice are built into the plan itself, because testing yourself sticks better than re-reading notes.</li>
+          <li><b>Interleaving</b> — each day mixes subjects rather than one giant single-subject block, which research on interleaved practice shows improves retention over "blocked" study.</li>
+          <li><b>A daily wind-down block</b> — ~20-30 min for your web novel, every day, deliberately kept outside the study-hour count so it never feels like it's eating into your plan.</li>
+          <li><b>Backlog tab</b> — anything whose due date slips by unchecked shows up there so it's never silently lost, even though the daily plan already rolls it forward automatically.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div id="tab-tests" style="display:none;">
+    <div class="filters" id="testFilters"></div>
+    <div id="testList"></div>
+  </div>
+
+  <div id="tab-catchup" style="display:none;">
+    <div class="banner info">Already studied some of this before you started using the planner? Set your real starting point here so the plan stops asking you to (re)do things you've already covered. This only marks the <i>first-time learning</i> task for each chapter as done — future revision passes before later tests still show up normally.</div>
+    <div id="catchupBody"></div>
+  </div>
+
+  <div id="tab-backlog" style="display:none;">
+    <div class="banner info">Anything whose original due date has already passed but isn't checked off yet — the planner keeps rolling these forward automatically, but this is the one place to see them all at a glance and catch up.</div>
+    <div id="backlogBody"></div>
+  </div>
+
+  <div id="tab-workout" style="display:none;">
+    <div class="banner info">Bodyweight-only, scales from 15 to 60 minutes — a "sleeper build" focus: strength and stamina without needing a gym, plus a mobility/breathing finisher for focus. Sits outside your study-hour budget, same as the wind-down block.</div>
+    <div class="filters" id="woDuration"></div>
+    <div id="woStreakRow" style="margin-bottom:14px;"></div>
+    <div id="woBody"></div>
+  </div>
+
+  <div id="tab-quiz" style="display:none;">
+    <div class="banner info">Timed self-tests. The engine's ready — real question papers get dropped into the bank as they arrive; each subject currently carries a small sample set so you can try it out.</div>
+    <div id="quizSetup"></div>
+    <div class="section-title">Recent attempts</div>
+    <div id="quizHistoryBody"></div>
+  </div>
+
+  <div id="tab-analytics" style="display:none;">
+    <div id="analyticsBody"></div>
+  </div>
+
+  <div id="tab-mistakes" style="display:none;">
+    <div class="banner info">Log why you got a question wrong — silly slip, concept gap, misread, or ran out of time. Patterns here are usually worth more than the raw score.</div>
+    <div id="mistakeForm"></div>
+    <div id="mistakeBody"></div>
+  </div>
+
+  <div id="tab-priority" style="display:none;">
+    <div class="banner info">This only changes which chapters get pulled <i>ahead</i> of schedule when there's spare daily capacity — real test-driven due dates never move. Reorder with the arrows; changes apply from your next recomputed day onward.</div>
+    <div class="section-title">Subject priority</div>
+    <div id="priSubjectOrder"></div>
+    <div class="section-title">Chapter order within a subject</div>
+    <div class="filters" id="priSubjectPicker"></div>
+    <div id="priChapterOrder"></div>
+  </div>
+
+  <footer>Aakash Test Planner · Carry Forward &amp; One Year Medical · Batch window 17 Mar – 1 Apr 2026<br>Adaptive daily plan recomputed each time you open this page — anything left undone rolls forward.<br><span style="opacity:.6">Build 2026-09-06-e · persistent schedule cache (survives refresh) + workout tab merged</span></footer>
+</div>
+
+<div id="quizOverlay" style="display:none;">
+  <div id="quizModal">
+    <div id="quizHeader"></div>
+    <div id="quizBody"></div>
+    <div id="quizFooter"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// DATA
+// ============================================================================
+function subj(p,c,b,z){ return {Physics:p, Chemistry:c, Botany:b, Zoology:z}; }
+const TESTS = [
+  {id:'PT-01', type:'PT', date:'2026-05-08', dateLabel:'8–10 May 2026', subjects: subj(
+    ['Electric Charges & Fields'],['Solutions'],
+    ['Sexual Reproduction in Flowering Plants — intro to pollination'],['Human Reproduction-I'])},
+  {id:'PT-02', type:'PT', date:'2026-06-05', dateLabel:'5–7 Jun 2026', subjects: subj(
+    ['Electrostatic Potential and Capacitance'],['Electrochemistry'],
+    ['Sexual Reproduction in Flowering Plants (contd.) — fertilization to polyembryony'],['Human Reproduction-II'])},
+  {id:'TE-01', type:'TE', date:'2026-06-17', dateLabel:'17,20,21 Jun 2026', subjects: subj(
+    ['Electric Charges & Fields','Electrostatic Potential and Capacitance'],['Solutions','Electrochemistry'],
+    ['Sexual Reproduction in Flowering Plants'],['Human Reproduction'])},
+  {id:'NRT-01', type:'NRT', date:'2026-07-12', dateLabel:'Opens 12 Jul 2026', subjects: subj(
+    ['Electric Charges and Fields','Electrostatic Potential and Capacitance'],['Solutions','Electrochemistry'],
+    ['Sexual Reproduction in Flowering Plants'],['Human Reproduction'])},
+  {id:'AIATS-01', type:'AIATS', date:'2026-07-19', dateLabel:'19 Jul 2026', subjects: subj(
+    ['Electric Charges and Fields','Electrostatic Potential and Capacitance'],['Solutions','Electrochemistry'],
+    ['Sexual Reproduction in Flowering Plants'],['Human Reproduction'])},
+  {id:'TE-02', type:'TE', date:'2026-07-29', dateLabel:'29 Jul, 1–2 Aug 2026', subjects: subj(
+    ['Current Electricity','Moving Charges and Magnetism','Magnetism and Matter'],['Chemical Kinetics','The d- & f-Block Elements'],
+    ['Principles of Inheritance & Variation'],['Reproductive Health'])},
+  {id:'TE-03', type:'TE', date:'2026-09-02', dateLabel:'2,5,6 Sep 2026', subjects: subj(
+    ['Electromagnetic Induction','Alternating Current','Electromagnetic Waves'],['Coordination Compounds','Haloalkanes and Haloarenes'],
+    ['Molecular Basis of Inheritance'],['Evolution'])},
+  {id:'NRT-02', type:'NRT', date:'2026-09-27', dateLabel:'Opens 27 Sep 2026', subjects: subj(
+    ['Current Electricity','Moving Charges and Magnetism','Magnetism and Matter','Electromagnetic Induction'],
+    ['Chemical Kinetics','The d- & f-Block Elements','Coordination Compounds'],
+    ['Principles of Inheritance and Variation','Molecular Basis of Inheritance'],['Reproductive Health','Evolution'])},
+  {id:'AIATS-02', type:'AIATS', date:'2026-10-04', dateLabel:'4 Oct 2026', subjects: subj(
+    ['Current Electricity','Moving Charges and Magnetism','Magnetism and Matter','Electromagnetic Induction'],
+    ['Chemical Kinetics','The d- & f-Block Elements','Coordination Compounds'],
+    ['Principles of Inheritance and Variation','Molecular Basis of Inheritance'],['Reproductive Health','Evolution'])},
+  {id:'TE-04', type:'TE', date:'2026-10-21', dateLabel:'21,24,25 Oct 2026', subjects: subj(
+    ['Ray Optics & Optical Instruments','Wave Optics','Dual Nature of Radiation and Matter'],
+    ['Alcohols, Phenols and Ethers','Aldehydes, Ketones and Carboxylic Acids'],
+    ['Microbes in Human Welfare','Organisms and Populations'],['Human Health & Disease'])},
+  {id:'NRT-03', type:'NRT', date:'2026-11-15', dateLabel:'Opens 15 Nov 2026', subjects: subj(
+    ['Alternating Current','Electromagnetic Wave','Ray Optics & Optical Instruments','Wave Optics'],
+    ['Haloalkanes and Haloarenes','Alcohols, Phenols and Ethers','Aldehydes, Ketones and Carboxylic Acids'],
+    ['Microbes in Human Welfare','Organisms and Populations'],['Human Health & Disease'])},
+  {id:'AIATS-03', type:'AIATS', date:'2026-11-22', dateLabel:'22 Nov 2026', subjects: subj(
+    ['Alternating Current','Electromagnetic Wave','Ray Optics & Optical Instruments','Wave Optics'],
+    ['Haloalkanes and Haloarenes','Alcohols, Phenols and Ethers','Aldehydes, Ketones and Carboxylic Acids'],
+    ['Microbes in Human Welfare','Organisms and Populations'],['Human Health & Disease'])},
+  {id:'TE-05', type:'TE', date:'2026-11-25', dateLabel:'25,28,29 Nov 2026', subjects: subj(
+    ['Atoms','Nuclei','Semiconductor Electronics','Experimental Skills'],
+    ['Amines','Biomolecules','The p-Block Elements (Group 15–18)','Principles Related to Practical Chemistry'],
+    ['Ecosystem','Biodiversity and Conservation'],
+    ['Biotechnology — Principles and Processes','Biotechnology and Its Applications'])},
+  {id:'NRT-04', type:'NRT', date:'2026-12-06', dateLabel:'Opens 6 Dec 2026', subjects: subj(
+    ['Units & Measurements','Motion in a Straight Line','Motion in a Plane'],
+    ['Some Basic Concepts of Chemistry','Structure of Atom','Classification of Elements and Periodicity in Properties','Chemical Bonding and Molecular Structure'],
+    ['Cell: The Unit of Life','Cell Cycle & Cell Division','The Living World'],
+    ['Structural Organisation in Animals (Animal Tissues)','Biomolecules'])},
+  {id:'AIATS-04', type:'AIATS', date:'2026-12-13', dateLabel:'13 Dec 2026', subjects: subj(
+    ['Units & Measurements','Motion in a Straight Line','Motion in a Plane'],
+    ['Some Basic Concepts of Chemistry','Structure of Atom','Classification of Elements and Periodicity in Properties','Chemical Bonding and Molecular Structure'],
+    ['Cell: The Unit of Life','Cell Cycle & Cell Division','The Living World'],
+    ['Structural Organisation in Animals (Animal Tissues)','Biomolecules'])},
+  {id:'NRT-05', type:'NRT', date:'2026-12-20', dateLabel:'Opens 20 Dec 2026', subjects: subj(
+    ['Laws of Motion','Work, Energy and Power','System of Particles & Rotational Motion'],
+    ['Thermodynamics','Equilibrium'],
+    ['Biological Classification','Morphology of Flowering Plants'],
+    ['Breathing & Exchange of Gases','Body Fluids and Circulation','Excretory Products and Their Elimination'])},
+  {id:'AIATS-05', type:'AIATS', date:'2026-12-27', dateLabel:'27 Dec 2026', subjects: subj(
+    ['Laws of Motion','Work, Energy and Power','System of Particles & Rotational Motion'],
+    ['Thermodynamics','Equilibrium'],
+    ['Biological Classification','Morphology of Flowering Plants'],
+    ['Breathing & Exchange of Gases','Body Fluids and Circulation','Excretory Products and Their Elimination'])},
+  {id:'NRT-06', type:'NRT', date:'2027-01-03', dateLabel:'Opens 3 Jan 2027', subjects: subj(
+    ['Gravitation','Mechanical Properties of Solids','Mechanical Properties of Fluids','Thermal Properties of Matter'],
+    ['Redox Reactions','Some p-Block Elements (Group 13 & 14)','Equilibrium'],
+    ['Anatomy of Flowering Plants','Plant Kingdom'],
+    ['Locomotion and Movement','Neural Control and Coordination','Chemical Coordination and Integration'])},
+  {id:'AIATS-06', type:'AIATS', date:'2027-01-10', dateLabel:'10 Jan 2027', subjects: subj(
+    ['Gravitation','Mechanical Properties of Solids','Mechanical Properties of Fluids','Thermal Properties of Matter'],
+    ['Redox Reactions','Some p-Block Elements (Group 13 & 14)','Equilibrium'],
+    ['Anatomy of Flowering Plants','Plant Kingdom'],
+    ['Locomotion and Movement','Neural Control and Coordination','Chemical Coordination and Integration'])},
+  {id:'NRT-07', type:'NRT', date:'2027-01-17', dateLabel:'Opens 17 Jan 2027', subjects: subj(
+    ['Thermodynamics','Kinetic Theory','Oscillations and Waves'],
+    ['Organic Chemistry: Basic Principles & Techniques','Hydrocarbons'],
+    ['Photosynthesis in Higher Plants','Respiration in Plants','Plant Growth and Development'],
+    ['Animal Kingdom & Structural Organisation — Cockroach & Frog'])},
+  {id:'AIATS-07', type:'AIATS', date:'2027-01-24', dateLabel:'24 Jan 2027', subjects: subj(
+    ['Thermodynamics','Kinetic Theory','Oscillations and Waves'],
+    ['Organic Chemistry: Basic Principles & Techniques','Hydrocarbons'],
+    ['Photosynthesis in Higher Plants','Respiration in Plants','Plant Growth and Development'],
+    ['Animal Kingdom & Structural Organisation — Cockroach & Frog'])},
+  {id:'NRT-08', type:'NRT', date:'2027-01-31', dateLabel:'Opens 31 Jan 2027', subjects: subj(
+    ['Dual Nature of Radiation and Matter','Atoms','Nuclei','Semiconductors','Experimental Skills'],
+    ['Amines','Biomolecules','The p-Block Elements (Group 15–18)','Principles Related to Practical Chemistry'],
+    ['Ecosystem','Biodiversity and Conservation'],
+    ['Biotechnology — Principles and Processes','Biotechnology and Its Applications'])},
+  {id:'AIATS-08', type:'AIATS', date:'2027-02-07', dateLabel:'7 Feb 2027', subjects: subj(
+    ['Dual Nature of Radiation and Matter','Atoms','Nuclei','Semiconductors','Experimental Skills'],
+    ['Amines','Biomolecules','The p-Block Elements (Group 15–18)','Principles Related to Practical Chemistry'],
+    ['Ecosystem','Biodiversity and Conservation'],
+    ['Biotechnology — Principles and Processes','Biotechnology and Its Applications'])},
+  {id:'AIATS-09', type:'MOCK', date:'2027-03-21', dateLabel:'21 Mar 2027', mock:true},
+  {id:'AIATS-10', type:'MOCK', date:'2027-03-28', dateLabel:'28 Mar 2027', mock:true},
+  {id:'AIATS-11', type:'MOCK', date:'2027-04-04', dateLabel:'4 Apr 2027', mock:true},
+  {id:'AIATS-12', type:'MOCK', date:'2027-04-11', dateLabel:'11 Apr 2027', mock:true},
+  {id:'AIATS-13', type:'MOCK', date:'2027-04-18', dateLabel:'18 Apr 2027', mock:true},
+  {id:'AIATS-14', type:'MOCK', date:'2027-04-25', dateLabel:'25 Apr 2027', mock:true},
+];
+const TYPE_LABEL = {PT:'Practice Test', TE:'Term Exam', NRT:'NCERT Revision (Online)', AIATS:'AIATS', MOCK:'Open Mock — full syllabus'};
+const SUBJ_COLOR = {Physics:'var(--physics)', Chemistry:'var(--chemistry)', Botany:'var(--botany)', Zoology:'var(--zoology)'};
+
+const ALIAS = { 'Electric Charges and Fields':'Electric Charges & Fields', 'Electromagnetic Wave':'Electromagnetic Waves', 'Semiconductors':'Semiconductor Electronics', 'Principles of Inheritance and Variation':'Principles of Inheritance & Variation' };
+function norm(name){ return ALIAS[name] || name; }
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+
+const CLASS11_CHAPTERS = new Set([
+  'Units & Measurements','Motion in a Straight Line','Motion in a Plane','Laws of Motion',
+  'Work, Energy and Power','System of Particles & Rotational Motion','Gravitation',
+  'Mechanical Properties of Solids','Mechanical Properties of Fluids','Thermal Properties of Matter',
+  'Thermodynamics','Kinetic Theory','Oscillations and Waves',
+  'Some Basic Concepts of Chemistry','Structure of Atom','Classification of Elements and Periodicity in Properties',
+  'Chemical Bonding and Molecular Structure','Equilibrium','Redox Reactions',
+  'Some p-Block Elements (Group 13 & 14)','Organic Chemistry: Basic Principles & Techniques','Hydrocarbons',
+  'The Living World','Biological Classification','Plant Kingdom','Animal Kingdom & Structural Organisation — Cockroach & Frog',
+  'Morphology of Flowering Plants','Anatomy of Flowering Plants','Cell: The Unit of Life','Cell Cycle & Cell Division',
+  'Photosynthesis in Higher Plants','Respiration in Plants','Plant Growth and Development',
+  'Structural Organisation in Animals (Animal Tissues)','Biomolecules',
+  'Breathing & Exchange of Gases','Body Fluids and Circulation','Excretory Products and Their Elimination',
+  'Locomotion and Movement','Neural Control and Coordination','Chemical Coordination and Integration',
+]);
+function classOf(subject, chapter){ return CLASS11_CHAPTERS.has(chapter) ? 11 : 12; }
+
+const PHYSICS_TOPICS = {
+  'Electric Charges & Fields': ["Electric charge, conductors & insulators, Coulomb's law","Electric field, field lines & superposition principle","Electric dipole, torque & dipole field","Continuous charge distributions & electric flux","Gauss's law & its applications"],
+  'Electrostatic Potential and Capacitance': ["Electric potential & potential due to a point charge/dipole","Equipotential surfaces & potential energy of a charge system","Conductors, dielectrics & polarization","Capacitors & the parallel plate capacitor","Combination of capacitors & energy stored"],
+  'Current Electricity': ["Electric current, drift velocity & Ohm's law","Resistance, resistivity & temperature dependence","Combination of resistors, EMF & internal resistance","Kirchhoff's laws & circuit analysis","Wheatstone bridge, meter bridge & potentiometer"],
+  'Moving Charges and Magnetism': ["Magnetic force on a moving charge & current-carrying wire","Biot–Savart law & field due to a straight wire","Ampere's circuital law & solenoid/toroid","Force between parallel currents & torque on a current loop","Moving-coil galvanometer & conversion to ammeter/voltmeter"],
+  'Magnetism and Matter': ["Bar magnet, field lines & earth's magnetism","Magnetic dipole moment & torque in a field","Dia-, para- & ferromagnetism","Hysteresis & magnetic materials"],
+  'Electromagnetic Induction': ["Magnetic flux & Faraday's laws","Lenz's law & motional EMF","Self and mutual inductance","AC generator principle","Eddy currents & applications"],
+  'Alternating Current': ["AC voltage/current, phasors & RMS values","AC through R, L and C circuits individually","LCR series circuit & resonance","Power in AC circuits & power factor","Transformers & LC oscillations"],
+  'Electromagnetic Waves': ["Displacement current & Maxwell's equations (concept)","Characteristics of electromagnetic waves","Electromagnetic spectrum & applications"],
+  'Ray Optics & Optical Instruments': ["Reflection at spherical mirrors & mirror formula","Refraction, total internal reflection & applications","Refraction at spherical surfaces & lens formula","Lens maker's equation, power & combination of lenses","Prism & dispersion of light","Optical instruments: microscope & telescope"],
+  'Wave Optics': ["Huygens' principle & wavefronts","Interference & Young's double slit experiment","Diffraction of light","Polarization of light"],
+  'Dual Nature of Radiation and Matter': ["Electron emission & the photoelectric effect","Einstein's photoelectric equation","de Broglie wavelength & wave nature of matter","Davisson–Germer experiment"],
+  'Atoms': ["Alpha-particle scattering & Rutherford's model","Bohr model of the hydrogen atom","Atomic spectra & energy levels","de Broglie's explanation of Bohr's postulate"],
+  'Nuclei': ["Composition & size of the nucleus, mass–energy relation","Nuclear binding energy & the stability curve","Radioactivity: alpha, beta & gamma decay","Nuclear fission & fusion"],
+  'Semiconductor Electronics': ["Energy bands & classification of solids","Intrinsic & extrinsic semiconductors, p-n junction","Diode as a rectifier & special diodes","Transistors & basic transistor action","Logic gates"],
+  'Experimental Skills': ["Common apparatus, least count & error concepts","Verification experiments (Ohm's law, resistivity, etc.)","Measurement experiments (focal length, refractive index, etc.)","Graph-based experiments & error analysis"],
+  'Units & Measurements': ["Physical quantities, SI units & dimensional formulae","Dimensional analysis & its applications","Errors in measurement","Significant figures & accuracy/precision"],
+  'Motion in a Straight Line': ["Position, displacement & velocity","Uniformly accelerated motion & equations of motion","Graphical analysis of motion (x-t, v-t, a-t)","Relative velocity"],
+  'Motion in a Plane': ["Vectors: addition, subtraction & resolution","Projectile motion","Uniform circular motion","Relative velocity in two dimensions"],
+  'Laws of Motion': ["Newton's first & second laws, momentum","Newton's third law & conservation of momentum","Friction: static, kinetic & rolling","Circular motion dynamics & banking of roads","Equilibrium of concurrent forces"],
+  'Work, Energy and Power': ["Work done by constant & variable forces","Kinetic energy & the work–energy theorem","Potential energy & conservation of mechanical energy","Power & collisions (elastic/inelastic)"],
+  'System of Particles & Rotational Motion': ["Centre of mass of a system of particles","Torque, angular momentum & their conservation","Moment of inertia & the parallel/perpendicular axis theorems","Rotational kinematics & dynamics","Rolling motion"],
+  'Gravitation': ["Kepler's laws & Newton's law of gravitation","Acceleration due to gravity & its variation","Gravitational potential energy & escape velocity","Orbital velocity & satellites"],
+  'Mechanical Properties of Solids': ["Stress, strain & Hooke's law","Stress–strain curve & elastic moduli","Applications of elastic behaviour"],
+  'Mechanical Properties of Fluids': ["Pressure, Pascal's law & buoyancy","Streamline flow, Bernoulli's principle & applications","Viscosity & Stokes' law","Surface tension & capillarity"],
+  'Thermal Properties of Matter': ["Temperature, thermal expansion & calorimetry","Change of state & latent heat","Heat transfer: conduction, convection & radiation","Newton's law of cooling"],
+  'Thermodynamics_P': ["Thermal equilibrium & the zeroth law","First law of thermodynamics & specific heats","Thermodynamic processes (isothermal, adiabatic, etc.)","Second law of thermodynamics & Carnot engine"],
+  'Kinetic Theory': ["Assumptions of kinetic theory & the ideal gas equation","Kinetic interpretation of temperature & pressure","Degrees of freedom & specific heat capacity","Mean free path"],
+  'Oscillations and Waves': ["Periodic motion & simple harmonic motion (SHM)","Energy in SHM & the simple pendulum/spring systems","Wave motion & progressive waves","Superposition, standing waves & beats","Doppler effect"],
+};
+const CHEMISTRY_TOPICS = {
+  'Solutions': ["Types of solutions & concentration terms","Solubility & Henry's law","Vapour pressure & Raoult's law","Colligative properties","Abnormal molar mass & van't Hoff factor"],
+  'Electrochemistry': ["Electrochemical cells & electrode potential","Nernst equation & EMF of a cell","Conductance & Kohlrausch's law","Electrolysis & Faraday's laws","Batteries, fuel cells & corrosion"],
+  'Chemical Kinetics': ["Rate of reaction & factors affecting it","Order & molecularity, rate law","Integrated rate equations (zero & first order)","Temperature dependence: Arrhenius equation","Collision theory"],
+  'The d- & f-Block Elements': ["General characteristics of transition elements","Oxidation states & colour of transition-metal ions","Important compounds (KMnO4, K2Cr2O7)","Lanthanoids & actinoids"],
+  'Coordination Compounds': ["Werner's theory & terminology","Nomenclature of coordination compounds","Isomerism in coordination compounds","Bonding: valence bond & crystal field theory","Importance & applications"],
+  'Haloalkanes and Haloarenes': ["Nomenclature & methods of preparation","Physical properties & nature of the C–X bond","Reactions of haloalkanes (SN1/SN2)","Reactions of haloarenes","Polyhalogen compounds"],
+  'Alcohols, Phenols and Ethers': ["Nomenclature & preparation of alcohols","Properties & reactions of alcohols","Phenols: preparation, properties & reactions","Ethers: preparation & properties"],
+  'Aldehydes, Ketones and Carboxylic Acids': ["Nomenclature & preparation of aldehydes/ketones","Nucleophilic addition reactions","Named reactions of aldehydes & ketones","Carboxylic acids: preparation & acidity","Reactions of carboxylic acids"],
+  'Amines': ["Classification & nomenclature of amines","Preparation of amines","Basicity & physical properties","Chemical reactions of amines","Diazonium salts"],
+  'Biomolecules': ["Carbohydrates: classification & structure","Proteins: amino acids & structure","Enzymes & vitamins","Nucleic acids"],
+  'The p-Block Elements (Group 15–18)': ["Group 15: nitrogen family & compounds (NH3, HNO3)","Group 16: oxygen family & compounds (O3, H2SO4)","Group 17: halogens & interhalogen compounds","Group 18: noble gases"],
+  'Principles Related to Practical Chemistry': ["Qualitative salt analysis (cations/anions)","Detection of functional groups","Chromatography & purification techniques","Titrimetric experiments"],
+  'Some Basic Concepts of Chemistry': ["Mole concept & stoichiometry","Laws of chemical combination","Percentage composition & empirical formula","Concentration terms & limiting reagent"],
+  'Structure of Atom': ["Discovery of subatomic particles & atomic models","Bohr's model & the hydrogen line spectrum","Dual nature of matter & Heisenberg's uncertainty principle","Quantum numbers & shapes of orbitals","Electronic configuration & the Aufbau principle"],
+  'Classification of Elements and Periodicity in Properties': ["Modern periodic law & the long-form periodic table","Periodic trends: atomic/ionic radii","Periodic trends: ionization enthalpy & electron gain enthalpy","Electronegativity & anomalous properties"],
+  'Chemical Bonding and Molecular Structure': ["Ionic bonding & lattice enthalpy","Covalent bonding & Lewis structures","VSEPR theory & molecular shapes","Valence bond theory & hybridization","Molecular orbital theory","Hydrogen bonding"],
+  'Thermodynamics_C': ["System, surroundings & the first law of thermodynamics","Enthalpy & thermochemistry (Hess's law)","Spontaneity & entropy","Gibbs energy & criteria for equilibrium"],
+  'Equilibrium': ["Physical equilibrium & its dynamic nature","Law of chemical equilibrium & Kc/Kp","Le Chatelier's principle","Acids, bases & pH (ionic equilibrium)","Buffer solutions & solubility product"],
+  'Redox Reactions': ["Oxidation number & balancing redox reactions","Types of redox reactions","Electrode processes (link to electrochemistry)"],
+  'Some p-Block Elements (Group 13 & 14)': ["Group 13: boron family & compounds","Group 14: carbon family & compounds","Anomalous behaviour of the first element in each group"],
+  'Organic Chemistry: Basic Principles & Techniques': ["IUPAC nomenclature & isomerism","Electronic displacement effects (inductive, resonance)","Types of organic reactions & reaction intermediates","Methods of purification of organic compounds","Qualitative & quantitative analysis"],
+  'Hydrocarbons': ["Alkanes: preparation & properties","Alkenes: preparation & properties","Alkynes: preparation & properties","Aromatic hydrocarbons & benzene","Electrophilic substitution reactions"],
+};
+function getSubtopics(subject, chapter){
+  if(subject==='Physics') return (chapter==='Thermodynamics' ? PHYSICS_TOPICS['Thermodynamics_P'] : PHYSICS_TOPICS[chapter]) || [chapter];
+  if(subject==='Chemistry') return (chapter==='Thermodynamics' ? CHEMISTRY_TOPICS['Thermodynamics_C'] : CHEMISTRY_TOPICS[chapter]) || [chapter];
+  return [chapter];
+}
+
+// ============================================================================
+// SCHEDULING ENGINE
+// ============================================================================
+const DAY = 86400000;
+function toDate(s){ return new Date(s+'T00:00:00'); }
+function addDays(d,n){ return new Date(d.getTime()+n*DAY); }
+function fmt(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function midnight(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
+function leadFor(type){ return type==='AIATS' ? 10 : 4; }
+
+function isChapterMarkedDone(progress, subject, chapter){
+  const subtopics = getSubtopics(subject, chapter);
+  return subtopics.every((st,i)=>{
+    const id = 'NEW::'+subject+'::'+slug(chapter)+'::'+i;
+    return progress[id] && progress[id].done;
+  });
+}
+
+// Hour estimates per task type — these are now REAL hours, not abstract units.
+const HRS = {
+  newPhysChem: 1,      // one Physics/Chemistry subtopic, properly studied
+  newBio: 2.5,          // one whole Botany/Zoology chapter (NCERT bio chapters are dense)
+  revise: 0.4,          // a lightweight revisit of an already-learned chapter
+  mock: 1.5,            // a self mock test
+  aiatsMock2: 1.5,
+  qsChunk: 0.5,          // one 20-question practice chunk (~1.5 min/question incl. review)
+  fullMock: 3.5,         // a real full-syllabus NEET-pattern sitting
+  bioRevise: 0.4,
+};
+const DEC1 = toDate('2026-12-01'); // hard cutoff: all first-time learning (11th+12th, every subject) done by here
+
+function buildTasks(today, progress){
+  progress = progress || {};
+  const tasks = [];
+  const seen = {};
+
+  // Every Class 11 chapter is naturally first introduced from NRT-04 (Dec) onward — i.e. AFTER
+  // Dec 1 — so capping them all at exactly Dec 1 would collapse them onto a single cliff-edge
+  // date instead of spreading smoothly. Stagger their due dates evenly across [today, Dec1]
+  // instead, in their natural chapter order, so mandatory pressure builds up gradually.
+  const cls11Ordered = [];
+  ['Physics','Chemistry','Botany','Zoology'].forEach(subject=>{
+    allChaptersBySubject()[subject].forEach(entry=>{
+      if(entry.cls===11 && !isChapterMarkedDone(progress, subject, entry.chapter)){
+        cls11Ordered.push(subject+'::'+entry.chapter);
+      }
+    });
+  });
+  const cls11StaggeredDue = {};
+  const staggerSpan = Math.max(1, Math.round((DEC1-today)/DAY));
+  cls11Ordered.forEach((key,i)=>{
+    cls11StaggeredDue[key] = addDays(today, Math.max(1, Math.round((i+1)/cls11Ordered.length * staggerSpan)));
+  });
+  const firstEffectiveDue = {}; // key -> the effectiveDue of the test that ACTUALLY first taught this chapter
+  const qsGenerated = {}; // key -> true once this chapter's 10 question-practice chunks have been created
+
+  TESTS.forEach(test=>{
+    const testDate = toDate(test.date);
+    const isPastTest = testDate < today;
+
+    if(test.mock){
+      if(!isPastTest){
+        tasks.push({id:'FMOCK::'+test.id, type:'full-mock', subject:null, chapter:null,
+          label:'Attempt full-syllabus mock: '+test.id, dueDate: testDate, testId:test.id, weight:HRS.fullMock, cls:null, fixed:true});
+      }
+      return;
+    }
+
+    const lead = leadFor(test.type);
+    const idealDue = addDays(testDate, -lead);
+    const effectiveDue = (!isPastTest && idealDue < today) ? addDays(testDate, -1) : idealDue;
+    const chaptersThisTest = [];
+
+    ['Physics','Chemistry','Botany','Zoology'].forEach(subject=>{
+      (test.subjects[subject]||[]).forEach(raw=>{
+        const chapter = norm(raw);
+        chaptersThisTest.push({subject,chapter});
+        const key = subject+'::'+chapter;
+
+        if(isPastTest){
+          if(isChapterMarkedDone(progress, subject, chapter)){
+            seen[key] = true;
+            if(!firstEffectiveDue[key]) firstEffectiveDue[key] = addDays(testDate,-lead); // studied a while back
+          }
+          return;
+        }
+
+        const isFirst = !seen[key];
+        seen[key] = true;
+
+        if(isFirst){
+          // Every chapter's first-time learning is capped at Dec 1 regardless of when its own
+          // test would otherwise have allowed it. Class 11 chapters (which ALL naturally fall
+          // after Dec 1) use a staggered date spread across the window instead of a flat Dec 1
+          // cliff-edge, so mandatory pressure builds up gradually rather than piling up at once.
+          const cls = classOf(subject,chapter);
+          const newDue = (cls===11 && cls11StaggeredDue[key])
+            ? cls11StaggeredDue[key]
+            : (effectiveDue < DEC1 ? effectiveDue : DEC1);
+          firstEffectiveDue[key] = newDue;
+          const isBio = (subject==='Botany'||subject==='Zoology');
+          getSubtopics(subject,chapter).forEach((st,i)=>{
+            tasks.push({id:'NEW::'+subject+'::'+slug(chapter)+'::'+i, type:'new', subject, chapter, subtopic:st,
+              label: chapter+' — '+st, dueDate: newDue, testId: test.id, weight: isBio?HRS.newBio:HRS.newPhysChem, cls});
+          });
+        } else {
+          tasks.push({id:'REV::'+subject+'::'+slug(chapter)+'::'+test.id, type:'revise', subject, chapter, subtopic:null,
+            label: 'Revise: '+chapter, dueDate: effectiveDue, testId: test.id, weight:HRS.revise, cls: classOf(subject,chapter)});
+        }
+      });
+    });
+
+    if(isPastTest) return;
+
+    tasks.push({id:'MOCK::'+test.id, type:'mock', subject:null, chapter:null,
+      label:'Self mock test — '+test.id+' topics', dueDate: addDays(testDate,-1), testId:test.id, weight:HRS.mock, cls:null});
+
+    if(test.type==='AIATS'){
+      tasks.push({id:'AMOCK2::'+test.id, type:'aiats-mock2', subject:null, chapter:null,
+        label:'2nd mock test — '+test.id+' (full revision)', dueDate: addDays(testDate,-2), testId:test.id, weight:HRS.aiatsMock2, cls:null});
+
+      // Practice questions, chunked to 20/day instead of dumped as one 200-question task.
+      // Generated ONCE per chapter (at its first AIATS appearance) — a chapter re-tested
+      // cumulatively at a LATER AIATS doesn't need a second fresh 200-question grind, the
+      // existing "Revise" task already covers that. Chapters taught a while back get a long
+      // runway (from when they were actually first studied, but never before today); chapters
+      // introduced at THIS very AIATS are stuck with the ~10-day window — a real constraint of
+      // being close to the exam, not something to paper over.
+      const uniqChapters = [...new Map(chaptersThisTest.map(c=>[c.subject+'::'+c.chapter,c])).values()];
+      const lastSafeDay = addDays(testDate,-1);
+      const CHUNKS = 10, PER_CHUNK = 20;
+      uniqChapters.forEach((c)=>{
+        const key = c.subject+'::'+c.chapter;
+        if(qsGenerated[key]) return;
+        qsGenerated[key] = true;
+        let windowStart = firstEffectiveDue[key] || effectiveDue;
+        if(windowStart < today) windowStart = today;
+        if(windowStart > lastSafeDay) windowStart = lastSafeDay;
+        const spanDays = Math.max(0, Math.round((lastSafeDay-windowStart)/DAY));
+        for(let i=0;i<CHUNKS;i++){
+          const due = addDays(windowStart, Math.round(i*spanDays/(CHUNKS-1||1)));
+          tasks.push({id:'AQS::'+c.subject+'::'+slug(c.chapter)+'::'+test.id+'::'+i, type:'aiats-qs',
+            subject:c.subject, chapter:c.chapter, label:'Practice '+PER_CHUNK+' Qs: '+c.chapter+' ('+(i+1)+'/'+CHUNKS+')',
+            dueDate: due, testId:test.id, weight:HRS.qsChunk, cls: classOf(c.subject,c.chapter)});
+        }
+      });
+    }
+  });
+  return tasks;
+}
+
+const LOOKAHEAD_DAYS = 70, RAMP_DAYS = 35;
+function isWeekend(d){ const w=d.getDay(); return w===0 || w===6; }
+function capRangeFor(d){ return isWeekend(d) ? [8,12] : [5,7]; } // real hours/day, on top of coaching
+function qsTargetFor(d){ return isWeekend(d) ? 2 : 1.5; }        // reserved daily question-solving slot
+
+// ============================================================================
+// USER-EDITABLE PRIORITY (get-ahead order only — never touches real due dates)
+// ----------------------------------------------------------------------------
+// subjectOrder: which subject's "new content" gets pulled ahead of schedule first
+// when there's spare daily capacity. chapterOrder[subject]: within that subject,
+// which chapter comes first. organicGateEnforced: whether Alcohols/Aldehydes/
+// Amines/Biomolecules(Chem) are hard-blocked until GOC+Hydrocarbons+Haloalkanes
+// are fully learned — editable, see the Priority tab.
+// ============================================================================
+let priorityConfig = {
+  subjectOrder: ['Physics','Chemistry','Botany','Zoology'],
+  chapterOrder: {},
+  organicGateEnforced: true,
+};
+const ORGANIC_CHAIN = ['Organic Chemistry: Basic Principles & Techniques','Hydrocarbons','Haloalkanes and Haloarenes',
+  'Alcohols, Phenols and Ethers','Aldehydes, Ketones and Carboxylic Acids','Amines','Biomolecules'];
+const CHEM_EARLY = ['Equilibrium','Thermodynamics'];
+
+function defaultChapterOrder(subject){
+  const chapters = allChaptersBySubject()[subject].map(e=>e.chapter);
+  if(subject!=='Chemistry') return chapters;
+  const chain = ORGANIC_CHAIN.filter(c=>chapters.includes(c));
+  const early = CHEM_EARLY.filter(c=>chapters.includes(c) && !chain.includes(c));
+  const rest = chapters.filter(c=> !chain.includes(c) && !early.includes(c));
+  return [...chain, ...early, ...rest];
+}
+// Merges the saved custom order with the current full chapter set — keeps any
+// user ordering, drops chapters that no longer exist, appends newly-added ones
+// (in default position) at the end so nothing silently vanishes from the list.
+function reconcileChapterOrder(subject, saved){
+  const all = allChaptersBySubject()[subject].map(e=>e.chapter);
+  const def = defaultChapterOrder(subject);
+  if(!saved || !saved.length) return def;
+  const kept = saved.filter(c=>all.includes(c));
+  const missing = def.filter(c=>!kept.includes(c));
+  return [...kept, ...missing];
+}
+// Replaces the old hardcoded tier system with a continuous rank derived from
+// priorityConfig — lower rank = scheduled earlier when there's spare capacity.
+// Tasks with no subject (mocks, full-mocks) aren't chapter content, so they only
+// ever move via their real due dates, never via this get-ahead ranking.
+function tierOf(t){
+  if(!t.subject) return Infinity;
+  const subjIdx = priorityConfig.subjectOrder.indexOf(t.subject);
+  const chapterList = reconcileChapterOrder(t.subject, priorityConfig.chapterOrder[t.subject]);
+  const chapIdx = chapterList.indexOf(t.chapter);
+  return (subjIdx<0?9:subjIdx)*1000 + (chapIdx<0?999:chapIdx);
+}
+
+function schedule(pendingTasks, today, planEnd){
+  const tasks = pendingTasks.slice();
+  const n = tasks.length;
+  const done = new Array(n).fill(false);
+
+  const GATE_CHAPTERS = new Set(['Organic Chemistry: Basic Principles & Techniques','Hydrocarbons','Haloalkanes and Haloarenes']);
+  const GATED_CHAPTERS = new Set(['Alcohols, Phenols and Ethers','Aldehydes, Ketones and Carboxylic Acids','Amines','Biomolecules']);
+  const organicGateOpen = !priorityConfig.organicGateEnforced || !tasks.some(t=>t.type==='new' && GATE_CHAPTERS.has(t.chapter));
+  const gatedOut = (t)=> t.type==='new' && !organicGateOpen && GATED_CHAPTERS.has(t.chapter);
+
+  // Index of 'new' task positions per chapter, so the prerequisite check below is O(1) instead
+  // of an O(n) scan per candidate per day.
+  const newIdxByChapter = {};
+  tasks.forEach((t,i)=>{
+    if(t.type!=='new') return;
+    const key = t.subject+'::'+t.chapter;
+    (newIdxByChapter[key] = newIdxByChapter[key] || []).push(i);
+  });
+  // A 'revise' or 'aiats-qs' (question practice) task only makes sense once that chapter's
+  // 'new' tasks are DONE — but "done" here must mean done WITHIN THE SIMULATED PLAN (i.e.
+  // already placed on an earlier day, tracked live via `done[]`), not "already completed in
+  // real life right this second". A 'new' task never becomes real-life-done mid-simulation, so
+  // checking real progress alone would permanently block almost every chapter's practice for
+  // the entire simulated year. Checking `done[]` lets each chapter's practice correctly unlock
+  // as soon as the plan itself has that chapter's learning finished, exactly where it should.
+  function prereqUnmet(t){
+    if(t.type!=='revise' && t.type!=='aiats-qs') return false;
+    const idxs = newIdxByChapter[t.subject+'::'+t.chapter];
+    if(!idxs) return false; // no pending 'new' task for this chapter at all — already done, or never generated
+    return idxs.some(i=>!done[i]);
+  }
+  const excluded = (t)=> gatedOut(t) || prereqUnmet(t);
+
+  // 'new' and 'aiats-qs' are deliberately EXCLUDED from the general due/tier phases below —
+  // they're only placed via their own dedicated mechanisms (the 40:60 split and the daily
+  // question-solving reservation). Without this, tier-priority content (e.g. Class 11 Physics)
+  // leaks extra allocation in through the general fill and quietly breaks the 40:60 ratio, and
+  // question-solving similarly overflows its reserved slot and crowds out new-topic time.
+  // Note: unlike `gatedOut` (a fixed, precomputable condition), `prereqUnmet` depends on `done[]`
+  // and changes as the day-loop progresses — so these order arrays are only valid for SORTING;
+  // `excluded(...)` must be re-checked live at placement time inside fillPool, which it is.
+  const dueOrder = tasks.map((t,i)=>i).filter(i=> !gatedOut(tasks[i]) && tasks[i].type!=='new' && tasks[i].type!=='aiats-qs')
+    .sort((a,b)=> tasks[a].dueDate-tasks[b].dueDate || tasks[a].id.localeCompare(tasks[b].id));
+  const fillOrder = tasks.map((t,i)=>i).filter(i=> !gatedOut(tasks[i]) && tasks[i].type!=='new' && tasks[i].type!=='aiats-qs').sort((a,b)=>{
+    const tierA=tierOf(tasks[a]), tierB=tierOf(tasks[b]);
+    if(tierA!==tierB) return tierA-tierB;
+    return tasks[a].dueDate-tasks[b].dueDate || tasks[a].id.localeCompare(tasks[b].id);
+  });
+  const qsOrder = tasks.map((t,i)=>i).filter(i=>tasks[i].type==='aiats-qs')
+    .sort((a,b)=> tasks[a].dueDate-tasks[b].dueDate || tasks[a].id.localeCompare(tasks[b].id));
+  const newOrderByTier = (clsWanted)=> tasks.map((t,i)=>i)
+    .filter(i=>tasks[i].type==='new' && tasks[i].cls===clsWanted && !gatedOut(tasks[i]))
+    .sort((a,b)=>{
+      const tierA=tierOf(tasks[a]), tierB=tierOf(tasks[b]);
+      if(tierA!==tierB) return tierA-tierB;
+      return tasks[a].dueDate-tasks[b].dueDate || tasks[a].id.localeCompare(tasks[b].id);
+    });
+  const cls11NewOrder = newOrderByTier(11);
+  const cls12NewOrder = newOrderByTier(12);
+
+  const byDay = {};
+  let d = new Date(today);
+  let remainingWeight = tasks.filter(t=>!t.optional).reduce((s,t)=>s+t.weight,0);
+  let notDoneCount = n;
+
+  // Fills from `order` (skipping already-done / not-yet-eligible tasks) up to `targetHours`
+  // for the given day; returns hours actually placed. Shared `done`/`byDay`/`remainingWeight`
+  // are updated as a side effect so later phases in the same day see the up-to-date state.
+  function fillPool(order, targetHours, dayKey){
+    let usedHere = 0;
+    for(const idx of order){
+      if(usedHere >= targetHours) break;
+      if(done[idx]) continue;
+      const t = tasks[idx];
+      if(prereqUnmet(t)) continue;
+      if(t.fixed && t.dueDate > d) continue;
+      const effectiveLookahead = t.type==='bio-revise' ? 5 : LOOKAHEAD_DAYS;
+      const daysAhead = Math.round((t.dueDate-d)/DAY);
+      if(daysAhead > effectiveLookahead) continue;
+      byDay[dayKey].push(t); usedHere += t.weight;
+      if(!t.optional) remainingWeight -= t.weight;
+      done[idx]=true; notDoneCount--;
+    }
+    return usedHere;
+  }
+
+  while(d <= planEnd && notDoneCount > 0){
+    const key = fmt(d);
+    byDay[key] = byDay[key] || [];
+    const daysFromToday = Math.round((d-today)/DAY);
+    const remainingDays = Math.max(1, Math.round((planEnd-d)/DAY)+1);
+    const globalPace = remainingWeight/remainingDays;
+    const HORIZON = 14;
+    let nearWeight = 0;
+    for(let i=0;i<n;i++){
+      if(done[i] || tasks[i].optional) continue;
+      const daysAhead = Math.round((tasks[i].dueDate-d)/DAY);
+      if(daysAhead>=0 && daysAhead <= HORIZON) nearWeight += tasks[i].weight;
+    }
+    const localPace = nearWeight/HORIZON;
+    const rampFactor = Math.min(1, 0.35 + 0.65*Math.min(1,daysFromToday/RAMP_DAYS));
+    const range = capRangeFor(d);
+    const rawPace = Math.max(globalPace,localPace)*rampFactor*1.15;
+    const cap = Math.min(range[1], Math.max(range[0], rawPace)); // clamped to real weekday/weekend hour bounds
+    const priorityBonus = Math.min(1.5, 0.5 + rampFactor); // small extra room for pulling priority content early
+
+    let used = 0;
+
+    // 1) Mandatory: any real, non-optional deadline due today or earlier — always honoured,
+    //    even if it pushes the day over its normal hour budget (a real exam date can't slip).
+    //    Exception: a 'revise' or 'aiats-qs' task whose prerequisite 'new' task isn't done yet
+    //    is never forced — there's nothing to revise or practice yet, so it waits for the
+    //    prerequisite instead (which will itself already be under mandatory pressure, since it
+    //    has an earlier due date).
+    for(let i=0;i<n;i++){
+      if(done[i] || tasks[i].optional || prereqUnmet(tasks[i])) continue;
+      if(tasks[i].dueDate <= d){
+        byDay[key].push(tasks[i]); used += tasks[i].weight; remainingWeight -= tasks[i].weight;
+        done[i]=true; notDoneCount--;
+      }
+    }
+    // 2) Reserved daily question-solving slot (~1.5h weekday / ~2h weekend) — a consistent
+    //    practice habit, not something that gets crowded out by new-topic cramming.
+    if(used < cap) used += fillPool(qsOrder, Math.min(qsTargetFor(d), cap-used), key);
+
+    // 3) New-content learning, split 40:60 between Class 11 and Class 12 (with rollover if
+    //    either side runs out of eligible chapters so capacity is never wasted).
+    if(used < cap){
+      let remaining = cap - used;
+      let cls11Target = remaining*0.4, cls12Target = remaining*0.6;
+      const used11 = fillPool(cls11NewOrder, cls11Target, key);
+      used += used11;
+      if(used11 < cls11Target) cls12Target += (cls11Target - used11);
+      if(used < cap){
+        const used12 = fillPool(cls12NewOrder, Math.min(cls12Target, cap-used), key);
+        used += used12;
+        if(used12 < cls12Target && used < cap){
+          used += fillPool(cls11NewOrder, Math.min(cls12Target-used12, cap-used), key);
+        }
+      }
+    }
+    // 4) Baseline fill, due-date order, for whatever's left (revision, extra question practice,
+    //    mocks) — guarantees smooth pacing regardless of tier, so nothing piles up unexpectedly.
+    if(used < cap) used += fillPool(dueOrder, cap-used, key);
+
+    // 5) Small tier-priority bonus on top — lets Organic Chem / Class 11 Physics / bio revision
+    //    grab a little extra room beyond the normal cap when there's real slack in the day.
+    const bonusCap = cap + priorityBonus;
+    if(used < bonusCap) used += fillPool(fillOrder, bonusCap-used, key);
+
+    d = addDays(d,1);
+  }
+  return byDay;
+}
+
+// All chapters ever appearing in TESTS (incl. past ones), chronological per subject.
+// Used by the Catch-up tab and by the bio-revision filler — independent of buildTasks'
+// forward-looking (isPastTest-skipping) generation, since catch-up needs to cover
+// chapters whose only test occurrence has already passed.
+function allChaptersBySubject(){
+  const order = {Physics:[], Chemistry:[], Botany:[], Zoology:[]};
+  const seen = {};
+  TESTS.forEach(test=>{
+    if(test.mock) return;
+    ['Physics','Chemistry','Botany','Zoology'].forEach(subject=>{
+      (test.subjects[subject]||[]).forEach(raw=>{
+        const chapter = norm(raw);
+        const key = subject+'::'+chapter;
+        if(seen[key]) return;
+        seen[key]=true;
+        const subtopics = getSubtopics(subject,chapter);
+        order[subject].push({
+          chapter, cls: classOf(subject,chapter),
+          subtopicIds: subtopics.map((st,i)=>'NEW::'+subject+'::'+slug(chapter)+'::'+i),
+        });
+      });
+    });
+  });
+  return order;
+}
+
+// Periodically resurface already-completed Botany/Zoology chapters as light, OPTIONAL
+// filler (never forced onto a day) — roughly every ~25 days per chapter, only consumed
+// when there's genuine spare capacity after everything else.
+function buildBioRevisionFiller(progress, today, planEnd){
+  const INTERVAL = 25, MAX_CYCLES = 8;
+  const order = allChaptersBySubject();
+  const out = [];
+  ['Botany','Zoology'].forEach(subject=>{
+    order[subject].forEach(entry=>{
+      const id0 = entry.subtopicIds[0];
+      const p = progress[id0];
+      if(!p || !p.done) return;
+      const completedDate = toDate(p.completedDate);
+      const daysSince = Math.max(0, Math.round((today-completedDate)/DAY));
+      const startCycle = Math.max(0, Math.floor(daysSince/INTERVAL));
+      for(let c=startCycle; c<startCycle+MAX_CYCLES; c++){
+        const due = addDays(completedDate, (c+1)*INTERVAL);
+        if(due > planEnd) break;
+        out.push({
+          id:'BIOREV::'+subject+'::'+slug(entry.chapter)+'::'+c, type:'bio-revise',
+          subject, chapter: entry.chapter, label:'Revise: '+entry.chapter,
+          dueDate: due, weight:1, cls: entry.cls, optional:true,
+        });
+      }
+    });
+  });
+  return out;
+}
+
+// ============================================================================
+// MISTAKE LOG — tag vocabulary (must match the .mi-tag.* CSS classes)
+// ============================================================================
+const MISTAKE_TAGS = [
+  {id:'silly',   label:'Silly slip'},
+  {id:'concept', label:'Concept gap'},
+  {id:'calc',    label:'Calculation error'},
+  {id:'misread', label:'Misread question'},
+  {id:'time',    label:'Ran out of time'},
+  {id:'other',   label:'Other'},
+];
+function mistakeTagLabel(id){ const t=MISTAKE_TAGS.find(x=>x.id===id); return t?t.label:id; }
+
+// ============================================================================
+// QUIZ / SELF-TEST QUESTION BANK
+// ----------------------------------------------------------------------------
+// Real question papers get integrated here as they arrive — grouped by subject,
+// each entry shaped like:
+//   { id:'unique-id', chapter:'Chapter Name', q:'Question text',
+//     options:['A','B','C','D'], correct: 0, explain:'optional one-liner' }
+// `chapter` should match a real chapter name where possible (keeps the chapter
+// filter and future mistake-log integration meaningful) but any label works.
+// The handful below are just sample questions to exercise the engine — safe to
+// delete once real sets are dropped in.
+// ============================================================================
+const QUESTION_BANK = {
+  Physics: [
+    {id:'p1', chapter:'Units and Measurements', q:'The dimensional formula of angular momentum is:',
+      options:['[ML²T⁻¹]','[MLT⁻¹]','[ML²T⁻²]','[ML⁻¹T⁻¹]'], correct:0, explain:'Angular momentum = mvr → [M][LT⁻¹][L] = [ML²T⁻¹].'},
+    {id:'p2', chapter:'Laws of Motion', q:'A block on a frictionless incline of angle θ has acceleration along the incline equal to:',
+      options:['g','g·sinθ','g·cosθ','g·tanθ'], correct:1, explain:'Only the component of gravity along the incline acts, g·sinθ.'},
+    {id:'p3', chapter:'Current Electricity', q:'Two resistors of 4 Ω and 6 Ω are connected in parallel. The equivalent resistance is:',
+      options:['10 Ω','2.4 Ω','5 Ω','1.5 Ω'], correct:1, explain:'1/R = 1/4 + 1/6 = 5/12 → R = 2.4 Ω.'},
+    {id:'p4', chapter:'Ray Optics and Optical Instruments', q:'A concave mirror produces a real, inverted image equal in size to the object when the object is placed at:',
+      options:['Focus','Pole','Centre of curvature','Infinity'], correct:2, explain:'At C, image forms at C too, real, inverted, same size.'},
+  ],
+  Chemistry: [
+    {id:'c1', chapter:'Some Basic Concepts of Chemistry', q:'The number of moles in 22 g of CO₂ (molar mass 44 g/mol) is:',
+      options:['0.25','0.5','1','2'], correct:1, explain:'22/44 = 0.5 mol.'},
+    {id:'c2', chapter:'Chemical Bonding and Molecular Structure', q:'Which of these molecules is non-polar despite having polar bonds?',
+      options:['NH₃','H₂O','CO₂','HCl'], correct:2, explain:'CO₂ is linear, so the two bond dipoles cancel out.'},
+    {id:'c3', chapter:'Equilibrium', q:'For a reaction, increasing pressure shifts equilibrium toward the side with:',
+      options:['More moles of gas','Fewer moles of gas','No effect ever','More heat released'], correct:1, explain:'Le Chatelier: higher pressure favours the side with fewer gas moles.'},
+    {id:'c4', chapter:'Haloalkanes and Haloarenes', q:'SN1 reactions proceed fastest with which type of alkyl halide?',
+      options:['Primary','Secondary','Tertiary','Methyl'], correct:2, explain:'Tertiary carbocations are most stable, favouring SN1.'},
+  ],
+  Botany: [
+    {id:'b1', chapter:'Cell: The Unit of Life', q:'Which organelle is correctly called the "powerhouse of the cell"?',
+      options:['Golgi apparatus','Mitochondrion','Ribosome','Lysosome'], correct:1, explain:'Mitochondria carry out oxidative phosphorylation to generate ATP.'},
+    {id:'b2', chapter:'Photosynthesis in Higher Plants', q:'The light-independent reactions of photosynthesis occur in the:',
+      options:['Thylakoid membrane','Stroma','Outer chloroplast membrane','Cytoplasm'], correct:1, explain:'The Calvin cycle (dark reactions) occurs in the stroma.'},
+    {id:'b3', chapter:'Plant Growth and Development', q:'Which plant hormone is primarily responsible for apical dominance?',
+      options:['Gibberellin','Cytokinin','Auxin','Ethylene'], correct:2, explain:'Auxin from the apical bud suppresses lateral bud growth.'},
+    {id:'b4', chapter:'Sexual Reproduction in Flowering Plants', q:'Double fertilisation in angiosperms produces the zygote and:',
+      options:['Endosperm','Cotyledon','Pericarp','Aleurone layer'], correct:0, explain:'One sperm fuses with the egg (zygote), the other with the polar nuclei (endosperm).'},
+  ],
+  Zoology: [
+    {id:'z1', chapter:'Human Reproduction', q:'Spermatogenesis occurs within the:',
+      options:['Vas deferens','Seminiferous tubules','Epididymis','Prostate gland'], correct:1, explain:'Seminiferous tubules of the testes are the site of sperm production.'},
+    {id:'z2', chapter:'Digestion and Absorption', q:'Which enzyme begins protein digestion in the stomach?',
+      options:['Trypsin','Pepsin','Amylase','Lipase'], correct:1, explain:'Pepsin, activated from pepsinogen by HCl, digests proteins in the stomach.'},
+    {id:'z3', chapter:'Body Fluids and Circulation', q:'The SA node, which initiates the heartbeat, is located in the:',
+      options:['Left atrium','Right atrium','Left ventricle','Right ventricle'], correct:1, explain:'The sino-atrial node sits in the wall of the right atrium.'},
+    {id:'z4', chapter:'Neural Control and Coordination', q:'The resting membrane potential of a neuron is primarily maintained by:',
+      options:['Na⁺-K⁺ pump','Calcium channels','Myelin sheath','Synaptic vesicles'], correct:0, explain:'The Na⁺-K⁺ ATPase pump maintains the ionic gradient at rest.'},
+  ],
+};
+
+// ============================================================================
+// STATE / STORAGE
+// ============================================================================
+let progress = {}; // id -> {done:true, completedDate:'YYYY-MM-DD'}
+let viewDate = midnight(new Date());
+let activeTestFilter = 'ALL';
+const REAL_TODAY = midnight(new Date());
+const PLAN_END = TESTS.reduce((m,t)=> toDate(t.date)>m?toDate(t.date):m, toDate(TESTS[0].date));
+const SPACED_INTERVALS = [1,3,7,16,35];
+
+const LS_KEY = 'neet-daily-planner-progress';
+const LS_SCHEDULE_KEY = 'neet-daily-planner-schedule';
+function hasWindowStorage(){
+  try { return typeof window!=='undefined' && !!window.storage && typeof window.storage.get==='function'; }
+  catch(e){ return false; }
+}
+async function loadProgress(){
+  // window.storage only exists inside Claude.ai's own artifact viewer. On a real deployed page
+  // (GitHub Pages, opened locally, etc.) it doesn't exist at all, and every save/load silently
+  // no-ops — which is exactly what caused completed tasks to vanish on refresh. localStorage is
+  // the correct mechanism for a genuinely standalone deployed page, so fall back to it whenever
+  // window.storage isn't actually available.
+  if(hasWindowStorage()){
+    try{ const r = await window.storage.get('daily-progress'); progress = r&&r.value ? JSON.parse(r.value) : {}; return; }
+    catch(e){ /* fall through to localStorage below */ }
+  }
+  try{ const raw = localStorage.getItem(LS_KEY); progress = raw ? JSON.parse(raw) : {}; }
+  catch(e){ progress = {}; }
+}
+async function saveProgress(){
+  if(hasWindowStorage()){
+    try{ await window.storage.set('daily-progress', JSON.stringify(progress)); return; }
+    catch(e){ /* fall through to localStorage below */ }
+  }
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(progress)); }
+  catch(e){ /* last resort: progress stays in-memory for this tab only */ }
+}
+
+let mistakes = []; // [{id,subject,chapter,tag,note,source,date}]
+const LS_MISTAKES_KEY = 'neet-daily-planner-mistakes';
+async function loadMistakes(){
+  if(hasWindowStorage()){
+    try{ const r = await window.storage.get('mistake-log'); mistakes = r&&r.value ? JSON.parse(r.value) : []; return; }
+    catch(e){ /* fall through */ }
+  }
+  try{ const raw = localStorage.getItem(LS_MISTAKES_KEY); mistakes = raw ? JSON.parse(raw) : []; }
+  catch(e){ mistakes = []; }
+}
+async function saveMistakes(){
+  if(hasWindowStorage()){
+    try{ await window.storage.set('mistake-log', JSON.stringify(mistakes)); return; }
+    catch(e){ /* fall through */ }
+  }
+  try{ localStorage.setItem(LS_MISTAKES_KEY, JSON.stringify(mistakes)); }
+  catch(e){ /* in-memory only */ }
+}
+
+let quizHistory = []; // [{id,date,scope,total,correct,pct,timed,auto}]
+const LS_QUIZ_KEY = 'neet-daily-planner-quiz-history';
+async function loadQuizHistory(){
+  if(hasWindowStorage()){
+    try{ const r = await window.storage.get('quiz-history'); quizHistory = r&&r.value ? JSON.parse(r.value) : []; return; }
+    catch(e){ /* fall through */ }
+  }
+  try{ const raw = localStorage.getItem(LS_QUIZ_KEY); quizHistory = raw ? JSON.parse(raw) : []; }
+  catch(e){ quizHistory = []; }
+}
+async function saveQuizHistory(){
+  if(hasWindowStorage()){
+    try{ await window.storage.set('quiz-history', JSON.stringify(quizHistory)); return; }
+    catch(e){ /* fall through */ }
+  }
+  try{ localStorage.setItem(LS_QUIZ_KEY, JSON.stringify(quizHistory)); }
+  catch(e){ /* in-memory only */ }
+}
+
+const LS_PRIORITY_KEY = 'neet-daily-planner-priority';
+async function loadPriorityConfig(){
+  let raw = null;
+  if(hasWindowStorage()){
+    try{ const r = await window.storage.get('schedule-priority'); raw = r&&r.value ? r.value : null; }
+    catch(e){ raw = null; }
+  }
+  if(raw===null){
+    try{ raw = localStorage.getItem(LS_PRIORITY_KEY); }catch(e){ raw = null; }
+  }
+  if(!raw) return;
+  try{
+    const parsed = JSON.parse(raw);
+    if(parsed && typeof parsed==='object'){
+      priorityConfig = Object.assign({subjectOrder:['Physics','Chemistry','Botany','Zoology'], chapterOrder:{}, organicGateEnforced:true}, parsed);
+      if(!Array.isArray(priorityConfig.subjectOrder) || priorityConfig.subjectOrder.length!==4){
+        priorityConfig.subjectOrder = ['Physics','Chemistry','Botany','Zoology'];
+      }
+      if(!priorityConfig.chapterOrder || typeof priorityConfig.chapterOrder!=='object') priorityConfig.chapterOrder = {};
+    }
+  }catch(e){ /* keep defaults */ }
+}
+async function savePriorityConfig(){
+  const payload = JSON.stringify(priorityConfig);
+  if(hasWindowStorage()){
+    try{ await window.storage.set('schedule-priority', payload); return; }catch(e){}
+  }
+  try{ localStorage.setItem(LS_PRIORITY_KEY, payload); }catch(e){}
+}
+
+function allTasks(){ return buildTasks(REAL_TODAY, progress); }
+function pendingTasks(){
+  const core = allTasks();
+  const bioFiller = buildBioRevisionFiller(progress, REAL_TODAY, PLAN_END);
+  return core.concat(bioFiller).filter(t=>!(progress[t.id]&&progress[t.id].done));
+}
+
+// The full plan is expensive-ish to recompute and, more importantly, recomputing it pulls
+// future content into today whenever completing a task frees up capacity — finishing one task
+// frees up a bit of room, and the "fill spare capacity" mechanism immediately backfills it from
+// a nearby future day. Caching for the CALENDAR DAY (persisted, not just in JS memory) fixes
+// this properly: once today's plan is computed, it stays fixed across refreshes too — a
+// completed task just gets its strikethrough (still checked live against `progress` at render
+// time), nothing new gets pulled in, even after a reload. Only a genuinely structural change
+// (Catch-up) explicitly invalidates it; a new calendar day always recomputes fresh.
+let cachedSchedule = null;
+let cachedScheduleDate = null;
+
+function serializeSchedule(byDay){
+  const out = {};
+  Object.entries(byDay).forEach(([day,list])=>{
+    out[day] = list.map(t=> Object.assign({}, t, {dueDate: fmt(t.dueDate)}));
+  });
+  return out;
+}
+function deserializeSchedule(raw){
+  const out = {};
+  Object.entries(raw).forEach(([day,list])=>{
+    out[day] = list.map(t=> Object.assign({}, t, {dueDate: toDate(t.dueDate)}));
+  });
+  return out;
+}
+async function loadScheduleCache(){
+  let raw = null;
+  if(hasWindowStorage()){
+    try{ const r = await window.storage.get('daily-schedule-cache'); raw = r&&r.value ? r.value : null; }
+    catch(e){ raw = null; }
+  }
+  if(raw===null){
+    try{ raw = localStorage.getItem(LS_SCHEDULE_KEY); }catch(e){ raw = null; }
+  }
+  if(!raw) return;
+  try{
+    const parsed = JSON.parse(raw);
+    if(parsed && parsed.date && parsed.byDay){
+      cachedSchedule = deserializeSchedule(parsed.byDay);
+      cachedScheduleDate = parsed.date;
+    }
+  }catch(e){ /* ignore a corrupt cache — getSchedule() will just recompute fresh */ }
+}
+async function saveScheduleCache(){
+  if(!cachedSchedule || !cachedScheduleDate) return;
+  const payload = JSON.stringify({date: cachedScheduleDate, byDay: serializeSchedule(cachedSchedule)});
+  if(hasWindowStorage()){
+    try{ await window.storage.set('daily-schedule-cache', payload); return; }catch(e){}
+  }
+  try{ localStorage.setItem(LS_SCHEDULE_KEY, payload); }catch(e){}
+}
+
+function invalidateSchedule(){ cachedSchedule = null; }
+function getSchedule(){
+  const todayKey = fmt(REAL_TODAY);
+  if(!cachedSchedule || cachedScheduleDate !== todayKey){
+    cachedSchedule = schedule(pendingTasks(), REAL_TODAY, PLAN_END);
+    cachedScheduleDate = todayKey;
+    saveScheduleCache(); // fire-and-forget; next load (including a refresh) will pick this up
+  }
+  return cachedSchedule;
+}
+
+function toggleTask(id, checked){
+  if(checked){ progress[id] = {done:true, completedDate: fmt(REAL_TODAY)}; }
+  else { delete progress[id]; }
+  saveProgress();
+  render();
+}
+
+// ============================================================================
+// STATS
+// ============================================================================
+function computeStats(){
+  const core = allTasks();
+  const coreIds = new Set(core.map(t=>t.id));
+  const total = core.length;
+  const done = Object.entries(progress).filter(([id,p])=>p.done && coreIds.has(id)).length;
+  const pct = total? Math.round(done/total*100) : 0;
+
+  // streak: consecutive days up to today with >=1 completion
+  const completedDates = new Set(Object.values(progress).filter(p=>p.done).map(p=>p.completedDate));
+  let streak = 0, d = new Date(REAL_TODAY);
+  while(completedDates.has(fmt(d))){ streak++; d = addDays(d,-1); }
+
+  const future = TESTS.filter(t=>toDate(t.date) >= REAL_TODAY);
+  const next = future.sort((a,b)=>toDate(a.date)-toDate(b.date))[0];
+
+  return {pct, next, streak};
+}
+
+// ============================================================================
+// WORKOUT — bodyweight, scales 15/30/45/60 min, "sleeper build" focus,
+// plus a 1-5 difficulty LEVEL that auto-adjusts from your rolling completion rate.
+// ============================================================================
+const WORKOUT_DURATIONS = [15,30,45,60];
+const WO_MIN_LEVEL = 1, WO_MAX_LEVEL = 5;
+const WO_ROLLING_WINDOW_DAYS = 14;   // how far back the rolling completion check looks
+const WO_MIN_SAMPLE_DAYS = 4;        // don't adjust level until we've seen at least this many scheduled workout days
+const WO_LEVEL_UP_RATE = 0.85;       // completing >=85% of exercises over the window -> level up
+const WO_LEVEL_DOWN_RATE = 0.40;     // completing <=40% -> level down
+
+// Reps/hold-time multiplier and bonus rounds per level. "Both together, gradually."
+const LEVEL_MULT = {1:1.0, 2:1.15, 3:1.30, 4:1.45, 5:1.60};
+const LEVEL_ROUND_BONUS = {1:0, 2:0, 3:1, 4:1, 5:2};
+
+// Rounds of the main circuit for each duration bucket, per day-type (before the level bonus above).
+const WO_ROUNDS = {
+  strength: {15:2, 30:3, 45:4, 60:5},
+  hiit:     {15:2, 30:4, 45:5, 60:6},
+};
+// Extra minutes of the optional walk on the mobility day, per duration bucket.
+const WO_WALK_MIN = {15:0, 30:10, 45:15, 60:20};
+
+function scaleAmount(unit, base, level){
+  const mult = LEVEL_MULT[level] || 1;
+  if(unit==='sec' || unit==='sec_side'){
+    return Math.round((base*mult)/5)*5; // round hold times to nearest 5s
+  }
+  return Math.max(base, Math.round(base*mult)); // reps: round to nearest whole
+}
+function variantName(ex, level){
+  if(!ex.variants) return ex.name;
+  let name = ex.name;
+  Object.keys(ex.variants).map(Number).sort((a,b)=>a-b).forEach(threshold=>{
+    if(level >= threshold) name = ex.variants[threshold];
+  });
+  return name;
+}
+function exerciseLabel(ex, level){
+  const name = variantName(ex, level);
+  const amt = ex.amount!=null ? scaleAmount(ex.unit, ex.amount, level) : null;
+  switch(ex.unit){
+    case 'reps': return name+' x'+amt;
+    case 'reps_side': return name+' x'+amt+'/side';
+    case 'sec': return name+' — '+amt+'s';
+    case 'sec_side': return name+' — '+amt+'s/side';
+    case 'work_sec': return name+' — '+amt+'s';
+    default: return name;
+  }
+}
+
+// getDay(): 0=Sun..6=Sat
+const WORKOUT_DAYS = {
+  1: { type:'strength', title:'Push & Core', emoji:'💪',
+    warmup: ['Arm circles — 20s each way','Torso twists x20','Jumping jacks x30'],
+    circuit: [
+      {name:'Push-ups (knees down is fine)', amount:12, unit:'reps', variants:{3:'Push-ups (strict, full range)',5:'Decline push-ups (feet elevated)'}},
+      {name:'Pike push-ups', amount:10, unit:'reps'},
+      {name:'Plank shoulder taps', amount:20, unit:'reps'},
+      {name:'Chair/bed-edge tricep dips', amount:12, unit:'reps'},
+      {name:'Plank hold', amount:30, unit:'sec', variants:{4:'Plank hold (hands, not forearms)'}},
+    ],
+    finisher: [{name:'Bicycle crunches', amount:20, unit:'reps'}],
+    cooldown: ['Chest & shoulder stretch — 45s each side'] },
+  2: { type:'strength', title:'Legs & Glutes', emoji:'🦵',
+    warmup: ['Bodyweight squats x15 (slow)','Leg swings — 10 each leg'],
+    circuit: [
+      {name:'Bodyweight squats', amount:20, unit:'reps', variants:{3:'Bodyweight squats (3s pause at bottom)'}},
+      {name:'Reverse lunges', amount:10, unit:'reps_side'},
+      {name:'Glute bridges', amount:20, unit:'reps', variants:{4:'Single-leg glute bridges'}},
+      {name:'Wall sit', amount:30, unit:'sec'},
+      {name:'Calf raises', amount:20, unit:'reps'},
+    ],
+    finisher: [{name:'Split jump lunges', amount:10, unit:'reps_side'}],
+    cooldown: ['Quad stretch — 30s/side','Hamstring stretch — 30s/side'] },
+  3: { type:'hiit', title:'Cardio / HIIT', emoji:'🔥',
+    warmup: ['Light jog on the spot — 1 min'],
+    circuit: [
+      {name:'Jumping jacks', amount:30, unit:'work_sec'},
+      {name:'High knees', amount:30, unit:'work_sec'},
+      {name:'Mountain climbers', amount:30, unit:'work_sec', variants:{3:'Mountain climbers (fast tempo)'}},
+      {name:'Burpees (step-back is fine)', amount:30, unit:'work_sec', variants:{5:'Burpees + tuck jump'}},
+      {name:'Skater hops', amount:30, unit:'work_sec'},
+    ],
+    circuitNote: 'Rest ~15s between moves',
+    cooldown: ['Walk it off — 1 min','Standing forward-fold stretch — 30s'] },
+  4: { type:'strength', title:'Pull & Core (bodyweight)', emoji:'🎯',
+    warmup: ['Cat-cow x10','Shadow arm pulls — 20s'],
+    circuit: [
+      {name:'Superman raises', amount:15, unit:'reps'},
+      {name:'Reverse snow angels', amount:15, unit:'reps'},
+      {name:'Bird-dog', amount:10, unit:'reps_side'},
+      {name:'Dead bug', amount:10, unit:'reps_side'},
+      {name:'Plank hold', amount:30, unit:'sec'},
+    ],
+    finisher: [{name:'Side plank', amount:20, unit:'sec_side', variants:{4:'Side plank with hip dips'}}],
+    cooldown: ['Lower back stretch — 45s','Lat stretch — 30s/side'] },
+  5: { type:'strength', title:'Full-Body Strength', emoji:'⚡',
+    warmup: ['Jumping jacks x30','Bodyweight squats x10'],
+    circuit: [
+      {name:'Squats', amount:15, unit:'reps', variants:{3:'Squats (3s pause at bottom)',5:'Jump squats'}},
+      {name:'Push-ups (knees down is fine)', amount:12, unit:'reps', variants:{3:'Push-ups (strict, full range)',5:'Decline push-ups (feet elevated)'}},
+      {name:'Lunges', amount:10, unit:'reps_side'},
+      {name:'Plank hold', amount:30, unit:'sec'},
+      {name:'Glute bridges', amount:15, unit:'reps'},
+      {name:'Mountain climbers', amount:20, unit:'reps'},
+    ],
+    finisher: [{name:'Burpees', amount:10, unit:'reps', variants:{5:'Burpees + push-up'}}],
+    cooldown: ['Full-body stretch flow — 1 min'] },
+  6: { type:'mobility', title:'Mobility & Focus', emoji:'🧘',
+    warmup: [],
+    circuit: ["Cat-cow x10","World's greatest stretch — 5/side",'Hip flexor stretch — 30s/side','Dead bug x10/side',"Child's pose — 30s"],
+    cooldown: ['Slow breathing (4s in, 6s out) — 2 min'] },
+  0: { type:'rest', title:'Rest Day', emoji:'😴', circuit: [] },
+};
+
+function woDayFor(date){ return WORKOUT_DAYS[date.getDay()]; }
+
+function woSettings(){
+  return progress.__workoutSettings || {duration:30, level:1, lastLevelCheckDate:null, pausedRanges:[]};
+}
+function getWorkoutDuration(){
+  const v = woSettings().duration;
+  return WORKOUT_DURATIONS.includes(v) ? v : 30;
+}
+function setWorkoutDuration(v){
+  progress.__workoutSettings = Object.assign({}, woSettings(), {duration:v});
+  saveProgress(); render();
+}
+
+// Pause covers a DATE RANGE (not just "today"), so exam days you never open the app on
+// still get correctly excluded once you resume and it looks back over the window.
+function woIsPaused(dateStr){
+  const ranges = woSettings().pausedRanges || [];
+  return ranges.some(r => dateStr >= r.start && (r.end===null || dateStr <= r.end));
+}
+function woIsPausedToday(){ return woIsPaused(fmt(REAL_TODAY)); }
+function woStartPause(){
+  const s = woSettings();
+  const ranges = (s.pausedRanges||[]).slice();
+  ranges.push({start: fmt(REAL_TODAY), end: null});
+  progress.__workoutSettings = Object.assign({}, s, {pausedRanges: ranges});
+  saveProgress(); render();
+}
+function woEndPause(){
+  const s = woSettings();
+  const ranges = (s.pausedRanges||[]).slice();
+  const open = ranges.find(r=>r.end===null);
+  if(open){
+    const yesterday = fmt(addDays(REAL_TODAY,-1));
+    if(yesterday < open.start){
+      // Started and resumed on the same day — it never actually covered a full day, drop it.
+      ranges.splice(ranges.indexOf(open),1);
+    } else {
+      open.end = yesterday; // end BEFORE today, so today is unpaused immediately on resume
+    }
+  }
+  progress.__workoutSettings = Object.assign({}, s, {pausedRanges: ranges});
+  saveProgress(); render();
+}
+
+function woExerciseId(date, idx){ return 'WO::'+fmt(date)+'::'+idx; }
+
+// Snapshots the duration/level actually shown for a given day, the first time that day's
+// list is built (i.e. from renderWorkout(), always for REAL_TODAY). Past days' meta is never
+// overwritten once set. This is what lets computeWorkoutStreak()/woRollingStats() reconstruct
+// a past day's *actual* checklist instead of silently re-scoring it against today's settings —
+// which otherwise breaks a genuinely-completed day retroactively the moment duration or the
+// auto-adjusted difficulty level changes (e.g. a level-up between then and now adds bonus
+// rounds, so "today's list" for that old date would have more items than were ever shown).
+function woMetaKey(dateStr){ return 'WO_META::'+dateStr; }
+function woMetaFor(dateStr){
+  const m = progress[woMetaKey(dateStr)];
+  return (m && WORKOUT_DURATIONS.includes(m.duration) && [1,2,3,4,5].includes(m.level)) ? m : null;
+}
+function woSnapshotMeta(dateStr, duration, level){
+  const existing = progress[woMetaKey(dateStr)];
+  if(existing && existing.duration===duration && existing.level===level) return;
+  progress[woMetaKey(dateStr)] = {duration, level};
+  saveProgress();
+}
+
+// Builds today's checklist for a given day-type/duration/level. Rest and mobility days
+// ignore `level` — mobility/recovery work isn't something you need to progressively overload.
+function buildWorkoutList(day, duration, level){
+  const items = [];
+  if(day.type==='rest'){
+    items.push({label:'Rest day — legs (and everything else) recover today. A short walk if you feel like it is optional, not required.'});
+    return items;
+  }
+  (day.warmup||[]).forEach(e=> items.push({label:e, section:'Warm-up'}));
+  if(day.type==='mobility'){
+    day.circuit.forEach(e=> items.push({label:e, section:'Routine'}));
+    const walk = WO_WALK_MIN[duration];
+    if(walk>0) items.push({label:'Optional brisk walk — '+walk+' min', section:'Routine'});
+  } else {
+    const rounds = Math.min(WO_ROUNDS[day.type][duration] + (LEVEL_ROUND_BONUS[level]||0), 7);
+    for(let r=1;r<=rounds;r++){
+      day.circuit.forEach(ex=> items.push({label:exerciseLabel(ex, level), section:'Main circuit — round '+r+' of '+rounds}));
+    }
+    if(duration>=45 && day.finisher) day.finisher.forEach(ex=> items.push({label:exerciseLabel(ex, level), section:'Finisher'}));
+  }
+  (day.cooldown||[]).forEach(e=> items.push({label:e, section:'Cooldown'}));
+  return items;
+}
+
+// Looks back WO_ROLLING_WINDOW_DAYS (excluding today, since it's not finished yet) across
+// scheduled (non-rest, non-paused) workout days, and returns how much of each day's checklist
+// got done. Days inside a pause range (exam days, etc.) are skipped entirely — they never
+// count for or against the rolling rate. Reconstructs each day's checklist from its own
+// snapshotted duration/level (see woSnapshotMeta) where available, falling back to the
+// passed-in current settings for older days from before that snapshot existed.
+function woRollingStats(duration, level){
+  let totalItems = 0, totalDone = 0, scheduledDays = 0;
+  for(let back=1; back<=WO_ROLLING_WINDOW_DAYS; back++){
+    const d = addDays(REAL_TODAY, -back);
+    const day = woDayFor(d);
+    if(day.type==='rest' || woIsPaused(fmt(d))) continue;
+    const meta = woMetaFor(fmt(d)) || {duration, level};
+    const items = buildWorkoutList(day, meta.duration, meta.level);
+    const done = items.filter((_,i)=> progress[woExerciseId(d,i)] && progress[woExerciseId(d,i)].done).length;
+    totalItems += items.length; totalDone += done; scheduledDays++;
+  }
+  const rate = totalItems>0 ? totalDone/totalItems : null;
+  return {rate, scheduledDays};
+}
+
+// Auto-adjusts the level at most once per calendar day (so it never shifts mid-session),
+// based on the rolling completion rate over the trailing window.
+function getWorkoutLevel(){
+  const s = woSettings();
+  let level = [1,2,3,4,5].includes(s.level) ? s.level : 1;
+  const todayKey = fmt(REAL_TODAY);
+  if(s.lastLevelCheckDate === todayKey) return level;
+
+  const {rate, scheduledDays} = woRollingStats(getWorkoutDuration(), level);
+  let reason = null;
+  if(scheduledDays >= WO_MIN_SAMPLE_DAYS && rate!=null){
+    if(rate >= WO_LEVEL_UP_RATE && level < WO_MAX_LEVEL){ level++; reason = 'up'; }
+    else if(rate <= WO_LEVEL_DOWN_RATE && level > WO_MIN_LEVEL){ level--; reason = 'down'; }
+  }
+  progress.__workoutSettings = Object.assign({}, s, {level, lastLevelCheckDate: todayKey});
+  saveProgress();
+  return level;
+}
+
+// Reconstructs each past day from its own snapshotted duration/level (falling back to
+// current settings for days before snapshots existed) so a genuinely-completed day never
+// retroactively breaks the streak just because today's duration/level has since changed.
+function computeWorkoutStreak(){
+  const duration = getWorkoutDuration(), level = getWorkoutLevel();
+  let streak = 0, d = new Date(REAL_TODAY);
+  while(true){
+    const day = woDayFor(d);
+    if(day.type==='rest' || woIsPaused(fmt(d))){ d = addDays(d,-1); continue; } // rest/paused days don't break the streak
+    const meta = woMetaFor(fmt(d)) || {duration, level};
+    const items = buildWorkoutList(day, meta.duration, meta.level);
+    const allDone = items.length>0 && items.every((_,i)=> progress[woExerciseId(d,i)] && progress[woExerciseId(d,i)].done);
+    if(!allDone) break;
+    streak++; d = addDays(d,-1);
+  }
+  return streak;
+}
+
+function renderWorkout(){
+  const durWrap = document.getElementById('woDuration');
+  durWrap.innerHTML = '';
+  const duration = getWorkoutDuration();
+  WORKOUT_DURATIONS.forEach(v=>{
+    const chip = document.createElement('button');
+    chip.className = 'chip'+(v===duration?' active':'');
+    chip.textContent = v+' min';
+    chip.onclick = ()=> setWorkoutDuration(v);
+    durWrap.appendChild(chip);
+  });
+  const paused = woIsPausedToday();
+  const pauseBtn = document.createElement('button');
+  pauseBtn.className = 'chip'+(paused?' active':'');
+  pauseBtn.style.marginLeft = 'auto';
+  pauseBtn.textContent = paused ? '▶ Resume workouts' : '⏸ Pause (exams)';
+  pauseBtn.onclick = ()=> paused ? woEndPause() : woStartPause();
+  durWrap.appendChild(pauseBtn);
+
+  const level = getWorkoutLevel();
+  woSnapshotMeta(fmt(REAL_TODAY), duration, level);
+  const day = woDayFor(REAL_TODAY);
+  const items = buildWorkoutList(day, duration, level);
+  const doneCount = items.filter((_,i)=> progress[woExerciseId(REAL_TODAY,i)] && progress[woExerciseId(REAL_TODAY,i)].done).length;
+  const streak = computeWorkoutStreak();
+
+  document.getElementById('woStreakRow').innerHTML =
+    '<div class="stat-row"><div class="stat"><div class="num">'+day.emoji+' '+day.title+'</div><div class="lbl">TODAY\'S FOCUS</div></div>'+
+    '<div class="stat"><div class="num">'+doneCount+'/'+items.length+'</div><div class="lbl">DONE TODAY</div></div>'+
+    '<div class="stat streak"><div class="num">'+streak+'</div><div class="lbl">DAY STREAK</div></div>'+
+    (day.type!=='rest' && day.type!=='mobility' ? '<div class="stat"><div class="num">Lv '+level+'</div><div class="lbl">DIFFICULTY</div></div>' : '')+
+    '</div>';
+
+  const body = document.getElementById('woBody');
+  body.innerHTML = '';
+
+  if(paused){
+    const pb = document.createElement('div');
+    pb.className = 'banner warn';
+    pb.textContent = '⏸ Paused since '+ ((woSettings().pausedRanges||[]).slice().reverse().find(r=>r.end===null)||{}).start +' — today (and every day until you resume) is fully excluded from your rolling completion rate and difficulty level. Optional exercises below, do them or don\'t, nothing here counts either way.';
+    body.appendChild(pb);
+  }
+
+  if(day.type!=='rest' && day.type!=='mobility'){
+    const {rate, scheduledDays} = woRollingStats(duration, level);
+    const banner = document.createElement('div');
+    banner.className = 'banner';
+    if(scheduledDays < WO_MIN_SAMPLE_DAYS){
+      banner.classList.add('empty'); banner.style.textAlign='left'; banner.style.padding='12px 14px';
+      banner.textContent = 'Level '+level+' — still building up your completion history ('+scheduledDays+'/'+WO_MIN_SAMPLE_DAYS+' workout days logged) before the difficulty starts auto-adjusting.';
+    } else {
+      const pct = Math.round(rate*100);
+      banner.classList.add(rate>=WO_LEVEL_UP_RATE ? 'info' : (rate<=WO_LEVEL_DOWN_RATE ? 'warn' : 'info'));
+      banner.textContent = 'Level '+level+' — '+pct+'% completed over your last '+scheduledDays+' workout days'+(paused?' (excluding paused days)':'')+'. '+
+        (rate>=WO_LEVEL_UP_RATE ? "You're crushing it — expect a bump up soon if this keeps up." :
+         rate<=WO_LEVEL_DOWN_RATE ? "Struggling to finish lately — this will ease down a level to keep it sustainable." :
+         'Right in the sustainable zone — holding steady here.');
+    }
+    body.appendChild(banner);
+  }
+
+  if(day.type==='rest'){
+    const rest = document.createElement('div');
+    rest.className = 'banner empty';
+    rest.innerHTML = day.emoji+' '+day.title+'<br><span style="font-size:11.5px;">'+items[0].label+'</span>';
+    body.appendChild(rest);
+    return;
+  }
+
+  if(day.circuitNote){
+    const note = document.createElement('div');
+    note.style.cssText = 'font-size:11.5px;color:var(--muted);margin:0 0 10px;';
+    note.textContent = day.circuitNote;
+    body.appendChild(note);
+  }
+
+  let lastSection = null;
+  items.forEach((item,i)=>{
+    if(item.section !== lastSection){
+      const head = document.createElement('div');
+      head.className = 'section-title';
+      head.textContent = item.section;
+      body.appendChild(head);
+      lastSection = item.section;
+    }
+    const id = woExerciseId(REAL_TODAY,i);
+    const done = !!(progress[id] && progress[id].done);
+    const row = document.createElement('label');
+    row.className = 'task'+(done?' done':'');
+    row.innerHTML = '<input type="checkbox" '+(done?'checked':'')+'><div class="t-body"><div class="t-label">'+item.label+'</div></div>';
+    row.querySelector('input').addEventListener('change', e=>{
+      if(e.target.checked) progress[id] = {done:true, completedDate: fmt(REAL_TODAY)};
+      else delete progress[id];
+      saveProgress(); render();
+    });
+    body.appendChild(row);
+  });
+}
+
+// ============================================================================
+// RENDER — Today tab
+// ============================================================================
+const TYPE_META = {
+  'new': {cls:'new', lbl:'New'}, 'revise': {cls:'revise', lbl:'Revise'},
+  'mock': {cls:'mock', lbl:'Mock Test'}, 'aiats-mock2': {cls:'mock', lbl:'Mock Test 2'},
+  'aiats-qs': {cls:'qs', lbl:'20 Qs'}, 'full-mock': {cls:'fullmock', lbl:'Open Mock'},
+  'bio-revise': {cls:'biorev', lbl:'Bio Revision'},
+};
+
+function renderToday(){
+  const sched = getSchedule();
+  const key = fmt(viewDate);
+  const items = (sched[key]||[]).slice().sort((a,b)=> (a.subject||'').localeCompare(b.subject||''));
+
+  document.getElementById('dayDow').textContent = viewDate.toLocaleDateString('en-IN',{weekday:'long'});
+  document.getElementById('dayFull').textContent = viewDate.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('datePick').value = key;
+
+  const banner = document.getElementById('dayBanner');
+  const totalW = items.reduce((s,t)=>s+t.weight,0);
+  const isToday = fmt(viewDate)===fmt(REAL_TODAY);
+  banner.innerHTML='';
+  const heavyThreshold = isWeekend(viewDate) ? 14 : 9; // meaningfully above the normal 8-12h/5-7h day
+  if(totalW > heavyThreshold){
+    banner.innerHTML = '<div class="banner warn">⚠ Heavy day — this is a compressed catch-up window before a nearby test (not every day looks like this). Prioritise the <b>Mock Test</b> and skim the rest if you are short on time; nothing here is lost, it just needed to land close to the deadline.</div>';
+  } else if(isToday && items.length===0){
+    banner.innerHTML = '<div class="banner info">Nothing mandatory is due today — great time to get ahead on Class 11, or use the spaced-repetition chips below.</div>';
+  }
+
+  const content = document.getElementById('dayContent');
+  content.innerHTML = '';
+
+  if(items.length===0 && totalW===0){
+    // still show review chips section below even if empty
+  } else {
+    const groups = {new:[], revise:[], mock:[], qs:[], biorev:[], other:[]};
+    items.forEach(t=>{
+      if(t.type==='new') groups.new.push(t);
+      else if(t.type==='revise') groups.revise.push(t);
+      else if(t.type==='mock'||t.type==='aiats-mock2'||t.type==='full-mock') groups.mock.push(t);
+      else if(t.type==='aiats-qs') groups.qs.push(t);
+      else if(t.type==='bio-revise') groups.biorev.push(t);
+      else groups.other.push(t);
+    });
+    const order = [['new','New topics'],['revise','Revision'],['mock','Mock tests'],['qs','Question practice'],['biorev','Bio revision (keeping it sharp for NEET)']];
+    order.forEach(([k,label])=>{
+      if(groups[k].length===0) return;
+      const sec = document.createElement('div');
+      sec.className='section-title';
+      sec.innerHTML = label+' <span class="cnt">'+groups[k].length+'</span>';
+      content.appendChild(sec);
+      groups[k].forEach(t=> content.appendChild(renderTaskRow(t)));
+    });
+  }
+
+  // spaced repetition chips
+  const reviewChips = computeReviewChips(viewDate);
+  if(reviewChips.length){
+    const sec = document.createElement('div');
+    sec.className='section-title';
+    sec.innerHTML = '🔁 Spaced-repetition quick revise <span class="cnt">'+reviewChips.length+'</span>';
+    content.appendChild(sec);
+    const row = document.createElement('div');
+    row.className='chip-row';
+    reviewChips.forEach(c=>{
+      const chip = document.createElement('label');
+      const chipDoneKey = 'RVW::'+c.task.id+'::'+key;
+      const isChipDone = !!progress[chipDoneKey];
+      chip.className='review-chip'+(isChipDone?' done':'');
+      chip.innerHTML = '<input type="checkbox" '+(isChipDone?'checked':'')+'><span class="rlbl">'+(c.task.chapter||c.task.label)+'</span> · '+c.daysAgo+'d ago';
+      chip.querySelector('input').addEventListener('change', e=>{
+        if(e.target.checked) progress[chipDoneKey] = {done:true, completedDate: fmt(REAL_TODAY)};
+        else delete progress[chipDoneKey];
+        saveProgress(); render();
+      });
+      row.appendChild(chip);
+    });
+    content.appendChild(row);
+  }
+
+  if(items.length===0 && reviewChips.length===0){
+    content.innerHTML = '<div class="banner empty">Nothing scheduled for this day.</div>';
+  }
+
+  // Always present, every day — personal wind-down time, deliberately outside the study-hour budget.
+  const leisure = document.createElement('div');
+  leisure.className = 'leisure-block';
+  leisure.innerHTML = '🌙 <b>Wind-down:</b> ~20–30 min reading your web novel, guilt-free — this is separate from your study hours, not part of them.';
+  content.appendChild(leisure);
+}
+
+function renderTaskRow(t){
+  const row = document.createElement('label');
+  const isDone = !!(progress[t.id]&&progress[t.id].done);
+  row.className='task'+(isDone?' done':'');
+  const meta = TYPE_META[t.type]||{cls:'new',lbl:t.type};
+  const subjTag = t.subject ? '<span class="t-dot" style="background:'+SUBJ_COLOR[t.subject]+'"></span><span class="t-subj">'+t.subject+'</span>' : '';
+  const clsTag = t.cls ? '<span class="t-cls">Class '+t.cls+'</span>' : '';
+  row.innerHTML = '<input type="checkbox" '+(isDone?'checked':'')+'>'+
+    '<div class="t-body"><div class="t-tags">'+subjTag+'<span class="t-type '+meta.cls+'">'+meta.lbl+'</span>'+clsTag+'</div>'+
+    '<div class="t-label">'+t.label+'</div></div>';
+  row.querySelector('input').addEventListener('change', e=> toggleTask(t.id, e.target.checked));
+  return row;
+}
+
+function computeReviewChips(day){
+  const key = fmt(day);
+  const chips = [];
+  Object.entries(progress).forEach(([id,p])=>{
+    if(!p.done || id.startsWith('RVW::')) return;
+    const diff = Math.round((day - toDate(p.completedDate))/DAY);
+    if(SPACED_INTERVALS.includes(diff)){
+      const task = allTasks().find(t=>t.id===id);
+      if(task) chips.push({task, daysAgo:diff});
+    }
+  });
+  return chips.slice(0,12);
+}
+
+// ============================================================================
+// RENDER — Test calendar tab
+// ============================================================================
+function renderTests(){
+  const filterBar = document.getElementById('testFilters');
+  filterBar.innerHTML='';
+  ['ALL','PT','TE','NRT','AIATS','MOCK'].forEach(ty=>{
+    const b = document.createElement('button');
+    b.className='chip'+(activeTestFilter===ty?' active':'');
+    b.textContent = ty==='ALL'?'All':(ty==='MOCK'?'Open Mock':ty);
+    b.onclick = ()=>{ activeTestFilter=ty; renderTests(); };
+    filterBar.appendChild(b);
+  });
+
+  const list = document.getElementById('testList');
+  list.innerHTML='';
+  const filtered = TESTS.filter(t=> activeTestFilter==='ALL' || t.type===activeTestFilter);
+  filtered.forEach(t=>{
+    const d = toDate(t.date);
+    const isPast = d < REAL_TODAY;
+    const diff = Math.round((d-REAL_TODAY)/DAY);
+    const lead = leadFor(t.type);
+    const card = document.createElement('div');
+    card.className = 'test-card'+(isPast?' past':'');
+    let chaptersHtml = '';
+    if(!t.mock){
+      chaptersHtml = '<div class="test-chapters">'+
+        ['Physics','Chemistry','Botany','Zoology'].map(s=>
+          (t.subjects[s]&&t.subjects[s].length) ? '<b>'+s+':</b> '+t.subjects[s].join('; ') : ''
+        ).filter(Boolean).join('<br>')+'</div>';
+    }
+    card.innerHTML = '<div class="test-top">'+
+      '<div><span class="test-id">'+t.id+'</span><span class="test-tag">'+TYPE_LABEL[t.type]+'</span></div>'+
+      '<div class="test-date">'+t.dateLabel+'<br><span style="color:var(--muted)">'+(isPast?Math.abs(diff)+' days ago':(diff===0?'today':'in '+diff+' days'))+'</span></div>'+
+      '</div>'+
+      (t.mock?'':'<div class="test-due">Topics due '+lead+' days before → '+fmt(addDays(d,-lead))+'</div>')+
+      chaptersHtml;
+    list.appendChild(card);
+  });
+}
+
+// ============================================================================
+// RENDER — Catch-up tab
+// ============================================================================
+function isChapterDone(entry){
+  return entry.subtopicIds.every(id => progress[id] && progress[id].done);
+}
+function setChapterDone(entry, done){
+  entry.subtopicIds.forEach(id=>{
+    if(done) progress[id] = {done:true, completedDate: fmt(REAL_TODAY)};
+    else delete progress[id];
+  });
+  invalidateSchedule();
+}
+
+function renderCatchup(){
+  const body = document.getElementById('catchupBody');
+  body.innerHTML = '';
+  const order = allChaptersBySubject();
+
+  ['Physics','Chemistry','Botany','Zoology'].forEach(subject=>{
+    const list = order[subject];
+    const section = document.createElement('div');
+    section.className = 'catchup-subject';
+
+    const head = document.createElement('div');
+    head.className = 'section-title';
+    head.innerHTML = '<span class="t-dot" style="background:'+SUBJ_COLOR[subject]+'"></span> '+subject;
+    section.appendChild(head);
+
+    // bulk "mark up through X" control
+    const bulk = document.createElement('div');
+    bulk.className = 'catchup-bulk';
+    const sel = document.createElement('select');
+    sel.className = 'datepick';
+    const optDefault = document.createElement('option');
+    optDefault.textContent = "I've completed up through…";
+    optDefault.value = '';
+    sel.appendChild(optDefault);
+    list.forEach((entry,i)=>{
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = entry.chapter;
+      sel.appendChild(opt);
+    });
+    const applyBtn = document.createElement('button');
+    applyBtn.className = 'todaybtn';
+    applyBtn.textContent = 'Apply';
+    applyBtn.onclick = ()=>{
+      const idx = parseInt(sel.value,10);
+      if(isNaN(idx)) return;
+      for(let i=0;i<=idx;i++) setChapterDone(list[i], true);
+      saveProgress(); render();
+    };
+    bulk.appendChild(sel); bulk.appendChild(applyBtn);
+    section.appendChild(bulk);
+
+    const chipRow = document.createElement('div');
+    chipRow.className = 'chip-row';
+    list.forEach(entry=>{
+      const done = isChapterDone(entry);
+      const chip = document.createElement('label');
+      chip.className = 'review-chip'+(done?' done':'');
+      chip.innerHTML = '<input type="checkbox" '+(done?'checked':'')+'><span class="rlbl">'+entry.chapter+'</span>'+(entry.cls?' · Cl.'+entry.cls:'');
+      chip.querySelector('input').addEventListener('change', e=>{
+        setChapterDone(entry, e.target.checked);
+        saveProgress(); render();
+      });
+      chipRow.appendChild(chip);
+    });
+    section.appendChild(chipRow);
+    body.appendChild(section);
+  });
+}
+
+// ============================================================================
+// RENDER — Backlog tab
+// ============================================================================
+function computeBacklog(){
+  const core = allTasks();
+  const bioFiller = buildBioRevisionFiller(progress, REAL_TODAY, PLAN_END);
+  return core.concat(bioFiller)
+    .filter(t=> !(progress[t.id]&&progress[t.id].done) && t.dueDate < REAL_TODAY)
+    .sort((a,b)=> a.dueDate-b.dueDate);
+}
+
+function renderBacklog(){
+  const body = document.getElementById('backlogBody');
+  body.innerHTML = '';
+  const items = computeBacklog();
+
+  if(items.length===0){
+    body.innerHTML = '<div class="banner empty">Nothing overdue right now — you\'re fully caught up. 🎉</div>';
+    return;
+  }
+
+  const sec = document.createElement('div');
+  sec.className = 'section-title';
+  sec.innerHTML = 'Overdue <span class="cnt">'+items.length+'</span>';
+  body.appendChild(sec);
+
+  items.forEach(t=>{
+    const daysLate = Math.round((REAL_TODAY - t.dueDate)/DAY);
+    const row = renderTaskRow(t);
+    const tagsEl = row.querySelector('.t-tags');
+    if(tagsEl){
+      const lateTag = document.createElement('span');
+      lateTag.className = 't-cls';
+      lateTag.style.color = 'var(--red)';
+      lateTag.style.borderColor = 'var(--red)';
+      lateTag.textContent = daysLate+'d overdue';
+      tagsEl.appendChild(lateTag);
+    }
+    body.appendChild(row);
+  });
+}
+
+// ============================================================================
+// MISTAKE LOG
+// ============================================================================
+let mistakeFilterSubject = 'ALL';
+let mistakeFilterTag = 'ALL';
+
+function populateChapterSelect(selectEl, subject, includeGeneral){
+  selectEl.innerHTML = '';
+  if(includeGeneral){
+    const g = document.createElement('option');
+    g.value = ''; g.textContent = 'General / not chapter-specific';
+    selectEl.appendChild(g);
+  }
+  if(!subject) return;
+  allChaptersBySubject()[subject].forEach(entry=>{
+    const opt = document.createElement('option');
+    opt.value = entry.chapter; opt.textContent = entry.chapter;
+    selectEl.appendChild(opt);
+  });
+}
+
+function renderMistakeForm(){
+  const wrap = document.getElementById('mistakeForm');
+  wrap.innerHTML = '';
+  const form = document.createElement('div');
+  form.className = 'mistake-form';
+
+  const row2 = document.createElement('div');
+  row2.className = 'row2';
+  const subjSel = document.createElement('select'); subjSel.id = 'mfSubject';
+  ['Physics','Chemistry','Botany','Zoology'].forEach(s=>{
+    const o = document.createElement('option'); o.value = s; o.textContent = s; subjSel.appendChild(o);
+  });
+  const chapSel = document.createElement('select'); chapSel.id = 'mfChapter';
+  populateChapterSelect(chapSel, subjSel.value, true);
+  subjSel.onchange = ()=> populateChapterSelect(chapSel, subjSel.value, true);
+  row2.appendChild(subjSel); row2.appendChild(chapSel);
+  form.appendChild(row2);
+
+  const tagSel = document.createElement('select'); tagSel.id = 'mfTag';
+  MISTAKE_TAGS.forEach(t=>{
+    const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; tagSel.appendChild(o);
+  });
+  form.appendChild(tagSel);
+
+  const note = document.createElement('textarea'); note.id = 'mfNote';
+  note.placeholder = "What went wrong? e.g. \"Forgot sign convention in mirror formula\"";
+  form.appendChild(note);
+
+  const source = document.createElement('input'); source.id = 'mfSource';
+  source.placeholder = 'Source (optional) — e.g. AIATS-03 Q45, NRT-02';
+  form.appendChild(source);
+
+  const btn = document.createElement('button');
+  btn.textContent = 'Log mistake';
+  btn.onclick = ()=>{
+    const noteVal = note.value.trim(), sourceVal = source.value.trim();
+    if(!noteVal && !sourceVal){ note.focus(); return; }
+    addMistake({
+      subject: subjSel.value, chapter: chapSel.value || null,
+      tag: tagSel.value, note: noteVal, source: sourceVal || null,
+    });
+    note.value = ''; source.value = '';
+    note.focus();
+  };
+  form.appendChild(btn);
+
+  wrap.appendChild(form);
+}
+
+function addMistake(entry){
+  mistakes.unshift(Object.assign({
+    id: 'MIS::'+Date.now()+'::'+Math.random().toString(36).slice(2,7),
+    date: fmt(new Date()),
+  }, entry));
+  saveMistakes();
+  renderMistakeList();
+}
+function deleteMistake(id){
+  mistakes = mistakes.filter(m=>m.id!==id);
+  saveMistakes();
+  renderMistakeList();
+}
+
+function renderMistakeList(){
+  const body = document.getElementById('mistakeBody');
+  body.innerHTML = '';
+
+  const filterRow = document.createElement('div');
+  filterRow.className = 'filters';
+  const subjOptions = ['ALL','Physics','Chemistry','Botany','Zoology'];
+  subjOptions.forEach(s=>{
+    const chip = document.createElement('button');
+    chip.className = 'chip'+(mistakeFilterSubject===s?' active':'');
+    chip.textContent = s==='ALL' ? 'All subjects' : s;
+    chip.onclick = ()=>{ mistakeFilterSubject = s; renderMistakeList(); };
+    filterRow.appendChild(chip);
+  });
+  body.appendChild(filterRow);
+
+  const tagFilterRow = document.createElement('div');
+  tagFilterRow.className = 'filters';
+  const tagChip = (id,label)=>{
+    const chip = document.createElement('button');
+    chip.className = 'chip'+(mistakeFilterTag===id?' active':'');
+    chip.textContent = label;
+    chip.onclick = ()=>{ mistakeFilterTag = id; renderMistakeList(); };
+    return chip;
+  };
+  tagFilterRow.appendChild(tagChip('ALL','All types'));
+  MISTAKE_TAGS.forEach(t=> tagFilterRow.appendChild(tagChip(t.id, t.label)));
+  body.appendChild(tagFilterRow);
+
+  const filtered = mistakes.filter(m=>
+    (mistakeFilterSubject==='ALL' || m.subject===mistakeFilterSubject) &&
+    (mistakeFilterTag==='ALL' || m.tag===mistakeFilterTag)
+  );
+
+  if(filtered.length===0){
+    const empty = document.createElement('div');
+    empty.className = 'banner empty';
+    empty.textContent = mistakes.length===0 ? "No mistakes logged yet — nice, or you just haven't started." : 'Nothing matches this filter.';
+    body.appendChild(empty);
+    return;
+  }
+
+  filtered.forEach(m=>{
+    const item = document.createElement('div');
+    item.className = 'mistake-item';
+    const top = document.createElement('div'); top.className = 'mi-top';
+    const tag = document.createElement('span'); tag.className = 'mi-tag '+m.tag; tag.textContent = mistakeTagLabel(m.tag);
+    const del = document.createElement('button'); del.className = 'mi-del'; del.textContent = '✕';
+    del.onclick = ()=> deleteMistake(m.id);
+    top.appendChild(tag); top.appendChild(del);
+    item.appendChild(top);
+
+    if(m.note){
+      const noteEl = document.createElement('div'); noteEl.className = 'mi-note'; noteEl.textContent = m.note;
+      item.appendChild(noteEl);
+    }
+    const meta = document.createElement('div'); meta.className = 'mi-meta';
+    const bits = [m.subject];
+    if(m.chapter) bits.push(m.chapter);
+    if(m.source) bits.push(m.source);
+    bits.push(m.date);
+    meta.textContent = bits.join(' · ');
+    item.appendChild(meta);
+
+    body.appendChild(item);
+  });
+}
+
+function renderMistakes(){
+  renderMistakeForm();
+  renderMistakeList();
+}
+
+// ============================================================================
+// ANALYTICS
+// ============================================================================
+const ANALYTIC_TYPE_META = {
+  NEW:    {label:'New learning',        weight:(subj)=> (subj==='Botany'||subj==='Zoology') ? HRS.newBio : HRS.newPhysChem, hasSubject:true},
+  REV:    {label:'Revision passes',     weight:()=>HRS.revise, hasSubject:true},
+  MOCK:   {label:'Self mock tests',     weight:()=>HRS.mock,   hasSubject:false},
+  AMOCK2: {label:'AIATS 2nd mocks',     weight:()=>HRS.aiatsMock2, hasSubject:false},
+  AQS:    {label:'AIATS practice sets', weight:()=>HRS.qsChunk, hasSubject:true},
+  FMOCK:  {label:'Full-syllabus mocks', weight:()=>HRS.fullMock, hasSubject:false},
+  BIOREV: {label:'Bio revision cycles', weight:()=>HRS.bioRevise, hasSubject:true},
+};
+
+function computeChapterStats(){
+  const bySubj = allChaptersBySubject();
+  const out = {};
+  ['Physics','Chemistry','Botany','Zoology'].forEach(s=>{
+    const total = bySubj[s].length;
+    const done = bySubj[s].filter(e=>isChapterMarkedDone(progress,s,e.chapter)).length;
+    out[s] = {total, done};
+  });
+  return out;
+}
+
+function computeAnalytics(){
+  const doneEntries = Object.entries(progress).filter(([id,p])=>p.done && !id.startsWith('WO::'));
+  let totalHours = 0;
+  const bySubjectHours = {Physics:0, Chemistry:0, Botany:0, Zoology:0};
+  const byTypeCount = {};
+  const dailyCounts = {};
+  doneEntries.forEach(([id,p])=>{
+    const parts = id.split('::');
+    const prefix = parts[0];
+    const meta = ANALYTIC_TYPE_META[prefix];
+    if(meta){
+      byTypeCount[prefix] = (byTypeCount[prefix]||0)+1;
+      const subj = parts[1];
+      const w = meta.weight(subj);
+      totalHours += w;
+      if(meta.hasSubject && bySubjectHours.hasOwnProperty(subj)) bySubjectHours[subj] += w;
+    }
+    if(p.completedDate) dailyCounts[p.completedDate] = (dailyCounts[p.completedDate]||0)+1;
+  });
+  return {totalHours, bySubjectHours, byTypeCount, dailyCounts, totalCompletions: doneEntries.length};
+}
+
+function computeMistakeStats(){
+  const byTag = {}, byChapter = {};
+  mistakes.forEach(m=>{
+    byTag[m.tag] = (byTag[m.tag]||0)+1;
+    if(m.chapter){ const key = m.subject+' — '+m.chapter; byChapter[key] = (byChapter[key]||0)+1; }
+  });
+  const topChapters = Object.entries(byChapter).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  return {byTag, topChapters, total: mistakes.length};
+}
+
+function computeQuizStats(){
+  if(quizHistory.length===0) return {count:0};
+  const count = quizHistory.length;
+  const avgPct = Math.round(quizHistory.reduce((s,q)=>s+q.pct,0)/count);
+  const bestPct = Math.max(...quizHistory.map(q=>q.pct));
+  return {count, avgPct, bestPct};
+}
+
+function barRowEl(label, valueText, fillPct, color){
+  const row = document.createElement('div'); row.className = 'bar-row';
+  const lbl = document.createElement('div'); lbl.className = 'bar-label'; lbl.textContent = label;
+  const track = document.createElement('div'); track.className = 'bar-track';
+  const fill = document.createElement('div'); fill.className = 'bar-fill';
+  fill.style.width = Math.max(0,Math.min(100,fillPct))+'%';
+  fill.style.background = color || 'var(--amber)';
+  track.appendChild(fill);
+  const val = document.createElement('div'); val.className = 'bar-value'; val.textContent = valueText;
+  row.appendChild(lbl); row.appendChild(track); row.appendChild(val);
+  return row;
+}
+
+function sectionTitleEl(text){
+  const el = document.createElement('div'); el.className = 'section-title'; el.textContent = text;
+  return el;
+}
+
+function renderAnalytics(){
+  const body = document.getElementById('analyticsBody');
+  body.innerHTML = '';
+
+  const {pct, streak} = computeStats();
+  const chapterStats = computeChapterStats();
+  const a = computeAnalytics();
+  const mStats = computeMistakeStats();
+  const qStats = computeQuizStats();
+  const chaptersDone = Object.values(chapterStats).reduce((s,c)=>s+c.done,0);
+  const chaptersTotal = Object.values(chapterStats).reduce((s,c)=>s+c.total,0);
+
+  // --- overview stat grid ---
+  const grid = document.createElement('div'); grid.className = 'stat-grid';
+  const statEl = (num,lbl)=>{
+    const s = document.createElement('div'); s.className = 'stat';
+    s.innerHTML = '<div class="num">'+num+'</div><div class="lbl">'+lbl+'</div>';
+    return s;
+  };
+  grid.appendChild(statEl(pct+'%', 'SYLLABUS DONE'));
+  grid.appendChild(statEl(Math.round(a.totalHours), 'HOURS LOGGED'));
+  grid.appendChild(statEl(chaptersDone+'/'+chaptersTotal, 'CHAPTERS DONE'));
+  grid.appendChild(statEl(streak, 'DAY STREAK'));
+  grid.appendChild(statEl(mStats.total, 'MISTAKES LOGGED'));
+  grid.appendChild(statEl(qStats.count ? qStats.avgPct+'%' : '—', 'AVG QUIZ SCORE'));
+  body.appendChild(grid);
+
+  // --- chapter completion by subject ---
+  body.appendChild(sectionTitleEl('Chapter completion by subject'));
+  ['Physics','Chemistry','Botany','Zoology'].forEach(s=>{
+    const c = chapterStats[s];
+    const fillPct = c.total ? (c.done/c.total*100) : 0;
+    body.appendChild(barRowEl(s, c.done+'/'+c.total, fillPct, SUBJ_COLOR[s]));
+  });
+
+  // --- where hours are going ---
+  const typeEntries = Object.entries(a.byTypeCount);
+  if(typeEntries.length){
+    body.appendChild(sectionTitleEl('Where your completions are going'));
+    const maxCount = Math.max(...typeEntries.map(([,c])=>c));
+    typeEntries.sort((x,y)=>y[1]-x[1]).forEach(([prefix,count])=>{
+      const meta = ANALYTIC_TYPE_META[prefix];
+      body.appendChild(barRowEl(meta?meta.label:prefix, String(count), count/maxCount*100, 'var(--purple)'));
+    });
+  }
+
+  // --- last 14 days activity ---
+  body.appendChild(sectionTitleEl('Last 14 days'));
+  const days = [];
+  for(let i=13;i>=0;i--) days.push(addDays(REAL_TODAY,-i));
+  const dayCounts = days.map(d=>a.dailyCounts[fmt(d)]||0);
+  const maxDay = Math.max(1, ...dayCounts);
+  days.forEach((d,i)=>{
+    const label = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]+' '+d.getDate();
+    body.appendChild(barRowEl(label, String(dayCounts[i]), dayCounts[i]/maxDay*100, 'var(--physics)'));
+  });
+
+  // --- mistake patterns ---
+  if(mStats.total){
+    body.appendChild(sectionTitleEl('Mistake patterns'));
+    const tagColors = {silly:'var(--amber)', concept:'var(--red)', calc:'var(--physics)', misread:'var(--purple)', time:'var(--chemistry)', other:'var(--muted-2)'};
+    const tagEntries = Object.entries(mStats.byTag).sort((x,y)=>y[1]-x[1]);
+    const maxTag = Math.max(...tagEntries.map(([,c])=>c));
+    tagEntries.forEach(([tag,count])=>{
+      body.appendChild(barRowEl(mistakeTagLabel(tag), String(count), count/maxTag*100, tagColors[tag]));
+    });
+    if(mStats.topChapters.length){
+      body.appendChild(sectionTitleEl('Most mistake-prone chapters'));
+      const maxChap = Math.max(...mStats.topChapters.map(([,c])=>c));
+      mStats.topChapters.forEach(([chap,count])=>{
+        body.appendChild(barRowEl(chap, String(count), count/maxChap*100, 'var(--red)'));
+      });
+    }
+  } else {
+    body.appendChild(sectionTitleEl('Mistake patterns'));
+    const empty = document.createElement('div'); empty.className = 'banner empty';
+    empty.textContent = 'No mistakes logged yet — head to the Mistakes tab after your next test.';
+    body.appendChild(empty);
+  }
+
+  // --- quiz performance ---
+  body.appendChild(sectionTitleEl('Quiz performance'));
+  if(qStats.count){
+    const qGrid = document.createElement('div'); qGrid.className = 'stat-grid';
+    qGrid.appendChild(statEl(qStats.count, 'QUIZZES TAKEN'));
+    qGrid.appendChild(statEl(qStats.avgPct+'%', 'AVERAGE SCORE'));
+    qGrid.appendChild(statEl(qStats.bestPct+'%', 'BEST SCORE'));
+    body.appendChild(qGrid);
+  } else {
+    const empty = document.createElement('div'); empty.className = 'banner empty';
+    empty.textContent = 'No quizzes taken yet — head to the Quiz tab.';
+    body.appendChild(empty);
+  }
+}
+
+// ============================================================================
+// QUIZ / SELF-TEST ENGINE
+// ============================================================================
+let quizState = null;
+
+function quizAvailableQuestions(subject, chapter){
+  const subjects = subject==='ALL' ? Object.keys(QUESTION_BANK) : [subject];
+  let pool = [];
+  subjects.forEach(s=>{
+    (QUESTION_BANK[s]||[]).forEach(q=>{
+      if(chapter && chapter!=='ALL' && q.chapter!==chapter) return;
+      pool.push(Object.assign({}, q, {subject:s}));
+    });
+  });
+  return pool;
+}
+
+function renderQuizSetup(){
+  const wrap = document.getElementById('quizSetup');
+  wrap.innerHTML = '';
+  const form = document.createElement('div');
+  form.className = 'mistake-form';
+
+  const row1 = document.createElement('div'); row1.className = 'quiz-setup-row';
+  const subjSel = document.createElement('select'); subjSel.id = 'qzSubject';
+  const allOpt = document.createElement('option'); allOpt.value = 'ALL'; allOpt.textContent = 'All subjects'; subjSel.appendChild(allOpt);
+  ['Physics','Chemistry','Botany','Zoology'].forEach(s=>{
+    const o = document.createElement('option'); o.value = s; o.textContent = s; subjSel.appendChild(o);
+  });
+  const chapSel = document.createElement('select'); chapSel.id = 'qzChapter';
+  row1.appendChild(subjSel); row1.appendChild(chapSel);
+  form.appendChild(row1);
+
+  const avail = document.createElement('div'); avail.className = 'quiz-avail'; avail.id = 'qzAvail';
+  form.appendChild(avail);
+
+  const row2 = document.createElement('div'); row2.className = 'row2';
+  const countInput = document.createElement('input'); countInput.id = 'qzCount'; countInput.type = 'number'; countInput.min = '1';
+  countInput.placeholder = 'Number of questions';
+  const timerSel = document.createElement('select'); timerSel.id = 'qzTimer';
+  [['0','No timer'],['45','45s / question'],['60','60s / question'],['90','90s / question']].forEach(([v,l])=>{
+    const o = document.createElement('option'); o.value = v; o.textContent = l; timerSel.appendChild(o);
+  });
+  timerSel.value = '60';
+  row2.appendChild(countInput); row2.appendChild(timerSel);
+  form.appendChild(row2);
+
+  function refreshAvail(){
+    const pool = quizAvailableQuestions(subjSel.value, chapSel.value);
+    avail.textContent = pool.length + (pool.length===1?' question available for this selection.':' questions available for this selection.');
+    countInput.value = Math.min(10, pool.length) || '';
+    countInput.max = String(pool.length);
+  }
+  function refreshChapters(){
+    chapSel.innerHTML = '';
+    const allChapOpt = document.createElement('option'); allChapOpt.value = 'ALL'; allChapOpt.textContent = 'All chapters'; chapSel.appendChild(allChapOpt);
+    const subjects = subjSel.value==='ALL' ? Object.keys(QUESTION_BANK) : [subjSel.value];
+    const chapters = new Set();
+    subjects.forEach(s=> (QUESTION_BANK[s]||[]).forEach(q=>chapters.add(q.chapter)));
+    [...chapters].forEach(c=>{
+      const o = document.createElement('option'); o.value = c; o.textContent = c; chapSel.appendChild(o);
+    });
+    refreshAvail();
+  }
+  subjSel.onchange = refreshChapters;
+  chapSel.onchange = refreshAvail;
+  refreshChapters();
+
+  const btn = document.createElement('button');
+  btn.textContent = 'Start quiz';
+  btn.onclick = ()=>{
+    const n = parseInt(countInput.value,10);
+    if(!n || n<1) return;
+    startQuiz(subjSel.value, chapSel.value, n, parseInt(timerSel.value,10));
+  };
+  form.appendChild(btn);
+
+  wrap.appendChild(form);
+}
+
+function shuffleArr(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+function startQuiz(subject, chapter, count, secPerQ){
+  const pool = quizAvailableQuestions(subject, chapter);
+  if(pool.length===0) return;
+  const questions = shuffleArr(pool).slice(0, Math.min(count, pool.length));
+  const scopeLabel = (subject==='ALL'?'Mixed':subject) + (chapter && chapter!=='ALL' ? ' — '+chapter : '') + ' · '+questions.length+' Qs';
+  quizState = {
+    questions, answers:{}, submitted:false, scopeLabel,
+    secPerQ, secondsTotal: secPerQ ? secPerQ*questions.length : 0,
+    secondsLeft: secPerQ ? secPerQ*questions.length : 0, timerId:null,
+  };
+  document.getElementById('quizOverlay').style.display = 'flex';
+  renderQuizModal();
+  if(secPerQ){
+    quizState.timerId = setInterval(()=>{
+      quizState.secondsLeft--;
+      updateQuizTimerDisplay();
+      if(quizState.secondsLeft<=0) submitQuiz(true);
+    }, 1000);
+  }
+}
+
+function updateQuizTimerDisplay(){
+  const el = document.getElementById('qzTimerDisplay');
+  if(!el) return;
+  const s = Math.max(0, quizState.secondsLeft);
+  const mm = String(Math.floor(s/60)).padStart(2,'0'), ss = String(s%60).padStart(2,'0');
+  el.textContent = mm+':'+ss;
+  el.classList.toggle('low', quizState.secondsTotal>0 && s <= Math.max(15, quizState.secondsTotal*0.2));
+}
+
+function selectQuizOption(qIndex, optIndex){
+  if(quizState.submitted) return;
+  quizState.answers[qIndex] = optIndex;
+  const qEl = document.getElementById('qzq-'+qIndex);
+  qEl.querySelectorAll('.qz-opt').forEach((el,i)=> el.classList.toggle('selected', i===optIndex));
+}
+
+function renderQuizModal(){
+  const header = document.getElementById('quizHeader');
+  header.innerHTML = '';
+  const title = document.createElement('div'); title.className = 'qz-title'; title.textContent = quizState.scopeLabel;
+  header.appendChild(title);
+  if(quizState.secPerQ){
+    const timer = document.createElement('div'); timer.className = 'qz-timer'; timer.id = 'qzTimerDisplay';
+    header.appendChild(timer);
+    updateQuizTimerDisplay();
+  }
+
+  const body = document.getElementById('quizBody');
+  body.innerHTML = '';
+  body.classList.remove('submitted');
+  quizState.questions.forEach((q,qi)=>{
+    const qEl = document.createElement('div'); qEl.className = 'qz-question'; qEl.id = 'qzq-'+qi;
+    const qt = document.createElement('div'); qt.className = 'qz-qtext'; qt.textContent = 'Q'+(qi+1)+'. '+q.q;
+    qEl.appendChild(qt);
+    q.options.forEach((opt,oi)=>{
+      const optEl = document.createElement('label'); optEl.className = 'qz-opt';
+      optEl.innerHTML = '<input type="radio" name="qzr'+qi+'">' + '<span>'+opt+'</span>';
+      optEl.onclick = (e)=>{ e.preventDefault(); selectQuizOption(qi, oi); };
+      qEl.appendChild(optEl);
+    });
+    body.appendChild(qEl);
+  });
+
+  const footer = document.getElementById('quizFooter');
+  footer.innerHTML = '';
+  const cancelBtn = document.createElement('button'); cancelBtn.className = 'qz-btn-secondary'; cancelBtn.textContent = 'Cancel';
+  cancelBtn.onclick = closeQuiz;
+  const submitBtn = document.createElement('button'); submitBtn.className = 'qz-btn-primary'; submitBtn.textContent = 'Submit';
+  submitBtn.onclick = ()=> submitQuiz(false);
+  footer.appendChild(cancelBtn); footer.appendChild(submitBtn);
+}
+
+function quickLogMistakeFromQuiz(qIndex, btn){
+  const q = quizState.questions[qIndex];
+  addMistake({
+    subject: q.subject, chapter: q.chapter, tag: 'concept',
+    note: 'Missed in quiz: '+q.q,
+    source: 'Quiz — '+quizState.scopeLabel,
+  });
+  btn.textContent = 'Logged ✓';
+  btn.classList.add('logged');
+}
+
+function submitQuiz(auto){
+  if(quizState.submitted) return;
+  quizState.submitted = true;
+  if(quizState.timerId) clearInterval(quizState.timerId);
+
+  let correctCount = 0;
+  quizState.questions.forEach((q,qi)=>{
+    const qEl = document.getElementById('qzq-'+qi);
+    const chosen = quizState.answers[qi];
+    const isCorrect = chosen===q.correct;
+    if(isCorrect) correctCount++;
+    qEl.querySelectorAll('.qz-opt').forEach((el,oi)=>{
+      el.querySelector('input').disabled = true;
+      if(oi===q.correct) el.classList.add('correct');
+      else if(oi===chosen) el.classList.add('incorrect');
+    });
+    if(q.explain){
+      const ex = document.createElement('div'); ex.className = 'qz-explain'; ex.textContent = q.explain;
+      qEl.appendChild(ex);
+    }
+    if(!isCorrect){
+      const actions = document.createElement('div'); actions.className = 'qz-missed-actions';
+      const logBtn = document.createElement('button'); logBtn.className = 'qz-log-btn'; logBtn.textContent = 'Log as mistake';
+      logBtn.onclick = ()=> quickLogMistakeFromQuiz(qi, logBtn);
+      actions.appendChild(logBtn);
+      qEl.appendChild(actions);
+    }
+  });
+  document.getElementById('quizBody').classList.add('submitted');
+
+  const total = quizState.questions.length;
+  const pct = Math.round(correctCount/total*100);
+  const banner = document.createElement('div');
+  banner.className = 'qz-score-banner ' + (pct>=70?'good':pct>=40?'mid':'bad');
+  banner.innerHTML = '<div class="qz-pct">'+pct+'%</div><div class="qz-sub">'+correctCount+'/'+total+' correct'+(auto?' · time\'s up':'')+'</div>';
+  document.getElementById('quizBody').prepend(banner);
+
+  const footer = document.getElementById('quizFooter');
+  footer.innerHTML = '';
+  const closeBtn = document.createElement('button'); closeBtn.className = 'qz-btn-primary'; closeBtn.textContent = 'Close';
+  closeBtn.onclick = closeQuiz;
+  footer.appendChild(closeBtn);
+
+  quizHistory.unshift({
+    id: 'QZ::'+Date.now(), date: fmt(new Date()), scope: quizState.scopeLabel,
+    total, correct: correctCount, pct, timed: !!quizState.secPerQ, auto: !!auto,
+  });
+  saveQuizHistory();
+  if(document.getElementById('tab-quiz').style.display !== 'none') renderQuizHistoryList();
+  if(document.getElementById('tab-analytics').style.display !== 'none') renderAnalytics();
+}
+
+function closeQuiz(){
+  if(quizState && quizState.timerId) clearInterval(quizState.timerId);
+  document.getElementById('quizOverlay').style.display = 'none';
+  quizState = null;
+}
+
+function renderQuizHistoryList(){
+  const body = document.getElementById('quizHistoryBody');
+  body.innerHTML = '';
+  if(quizHistory.length===0){
+    body.innerHTML = '<div class="banner empty">No attempts yet — set up a quiz above to get started.</div>';
+    return;
+  }
+  quizHistory.slice(0,20).forEach(h=>{
+    const card = document.createElement('div'); card.className = 'test-card';
+    const row = document.createElement('div'); row.className = 'quiz-history-row';
+    const left = document.createElement('div');
+    left.innerHTML = '<div class="test-id">'+h.scope+'</div><div class="test-date">'+h.date+(h.timed?' · timed':'')+(h.auto?' · auto-submitted':'')+'</div>';
+    const scoreColor = h.pct>=70?'var(--botany)':h.pct>=40?'var(--amber)':'var(--red)';
+    const score = document.createElement('div'); score.className = 'quiz-history-score'; score.style.color = scoreColor;
+    score.textContent = h.correct+'/'+h.total+' ('+h.pct+'%)';
+    row.appendChild(left); row.appendChild(score);
+    card.appendChild(row);
+    body.appendChild(card);
+  });
+}
+
+function renderQuizTab(){
+  renderQuizSetup();
+  renderQuizHistoryList();
+}
+
+// ============================================================================
+// PRIORITY EDITOR — subject order + per-subject chapter order + organic gate
+// ============================================================================
+let priorityPickerSubject = 'Physics';
+
+function moveInArray(arr, idx, dir){
+  const newIdx = idx+dir;
+  if(newIdx<0 || newIdx>=arr.length) return arr.slice();
+  const copy = arr.slice();
+  const tmp = copy[idx]; copy[idx] = copy[newIdx]; copy[newIdx] = tmp;
+  return copy;
+}
+
+function savePriorityAndRefresh(){
+  savePriorityConfig();
+  invalidateSchedule();
+  render();
+}
+
+function renderPrioritySubjectOrder(){
+  const wrap = document.getElementById('priSubjectOrder');
+  wrap.innerHTML = '';
+  priorityConfig.subjectOrder.forEach((subj,i)=>{
+    const row = document.createElement('div'); row.className = 'priority-row';
+    const dot = document.createElement('span'); dot.className = 't-dot'; dot.style.background = SUBJ_COLOR[subj];
+    const label = document.createElement('span'); label.className = 'priority-label'; label.textContent = (i+1)+'. '+subj;
+    const btns = document.createElement('div'); btns.className = 'priority-btns';
+    const up = document.createElement('button'); up.className = 'reorder-btn'; up.textContent = '↑'; up.disabled = (i===0);
+    up.onclick = ()=>{ priorityConfig.subjectOrder = moveInArray(priorityConfig.subjectOrder,i,-1); savePriorityAndRefresh(); };
+    const down = document.createElement('button'); down.className = 'reorder-btn'; down.textContent = '↓'; down.disabled = (i===priorityConfig.subjectOrder.length-1);
+    down.onclick = ()=>{ priorityConfig.subjectOrder = moveInArray(priorityConfig.subjectOrder,i,1); savePriorityAndRefresh(); };
+    btns.appendChild(up); btns.appendChild(down);
+    row.appendChild(dot); row.appendChild(label); row.appendChild(btns);
+    wrap.appendChild(row);
+  });
+}
+
+function renderPriorityChapterList(){
+  const wrap = document.getElementById('priChapterOrder');
+  wrap.innerHTML = '';
+  const subject = priorityPickerSubject;
+
+  if(subject==='Chemistry'){
+    const gateRow = document.createElement('label'); gateRow.className = 'priority-gate-toggle';
+    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = priorityConfig.organicGateEnforced;
+    cb.onchange = (e)=>{ priorityConfig.organicGateEnforced = e.target.checked; savePriorityAndRefresh(); };
+    const span = document.createElement('span');
+    span.textContent = 'Enforce Organic Chemistry sequence (GOC → Hydrocarbons → Haloalkanes before Alcohols/Aldehydes/Amines/Biomolecules)';
+    gateRow.appendChild(cb); gateRow.appendChild(span);
+    wrap.appendChild(gateRow);
+  }
+
+  const list = reconcileChapterOrder(subject, priorityConfig.chapterOrder[subject]);
+  list.forEach((chapter,i)=>{
+    const row = document.createElement('div'); row.className = 'priority-row';
+    const label = document.createElement('span'); label.className = 'priority-label'; label.textContent = (i+1)+'. '+chapter;
+    const btns = document.createElement('div'); btns.className = 'priority-btns';
+    const up = document.createElement('button'); up.className = 'reorder-btn'; up.textContent = '↑'; up.disabled = (i===0);
+    up.onclick = ()=>{ priorityConfig.chapterOrder[subject] = moveInArray(list,i,-1); savePriorityAndRefresh(); };
+    const down = document.createElement('button'); down.className = 'reorder-btn'; down.textContent = '↓'; down.disabled = (i===list.length-1);
+    down.onclick = ()=>{ priorityConfig.chapterOrder[subject] = moveInArray(list,i,1); savePriorityAndRefresh(); };
+    btns.appendChild(up); btns.appendChild(down);
+    row.appendChild(label); row.appendChild(btns);
+    wrap.appendChild(row);
+  });
+
+  const resetBtn = document.createElement('button');
+  resetBtn.className = 'todaybtn priority-reset-btn';
+  resetBtn.textContent = 'Reset '+subject+' to default order';
+  resetBtn.onclick = ()=>{ priorityConfig.chapterOrder[subject] = defaultChapterOrder(subject); savePriorityAndRefresh(); };
+  wrap.appendChild(resetBtn);
+}
+
+function renderPriorityChapterPicker(){
+  const chipWrap = document.getElementById('priSubjectPicker');
+  chipWrap.innerHTML = '';
+  ['Physics','Chemistry','Botany','Zoology'].forEach(s=>{
+    const chip = document.createElement('button');
+    chip.className = 'chip'+(priorityPickerSubject===s?' active':'');
+    chip.textContent = s;
+    chip.onclick = ()=>{ priorityPickerSubject = s; renderPriorityChapterPicker(); };
+    chipWrap.appendChild(chip);
+  });
+  renderPriorityChapterList();
+}
+
+function renderPriority(){
+  renderPrioritySubjectOrder();
+  renderPriorityChapterPicker();
+}
+
+// ============================================================================
+// GLOBAL RENDER + INIT
+// ============================================================================
+function render(){
+  const {pct, next, streak} = computeStats();
+  document.getElementById('statProgress').textContent = pct+'%';
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('statStreak').textContent = streak;
+  document.getElementById('statNext').textContent = next ? next.id : '—';
+  document.getElementById('statNextLbl').textContent = next ? ('IN '+Math.round((toDate(next.date)-REAL_TODAY)/DAY)+' DAYS') : 'NO TESTS LEFT';
+  renderToday();
+  renderTests();
+  if(document.getElementById('tab-catchup').style.display !== 'none') renderCatchup();
+  if(document.getElementById('tab-backlog').style.display !== 'none') renderBacklog();
+  if(document.getElementById('tab-workout').style.display !== 'none') renderWorkout();
+  if(document.getElementById('tab-analytics').style.display !== 'none') renderAnalytics();
+  if(document.getElementById('tab-priority').style.display !== 'none') renderPriority();
+}
+
+document.getElementById('prevDay').onclick = ()=>{ viewDate = addDays(viewDate,-1); renderToday(); };
+document.getElementById('nextDay').onclick = ()=>{ viewDate = addDays(viewDate,1); renderToday(); };
+document.getElementById('jumpToday').onclick = ()=>{ viewDate = midnight(new Date()); renderToday(); };
+document.getElementById('datePick').onchange = (e)=>{ if(e.target.value){ viewDate = toDate(e.target.value); renderToday(); } };
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.onclick = ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-today').style.display = tab.dataset.tab==='today' ? '' : 'none';
+    document.getElementById('tab-tests').style.display = tab.dataset.tab==='tests' ? '' : 'none';
+    document.getElementById('tab-catchup').style.display = tab.dataset.tab==='catchup' ? '' : 'none';
+    document.getElementById('tab-backlog').style.display = tab.dataset.tab==='backlog' ? '' : 'none';
+    document.getElementById('tab-workout').style.display = tab.dataset.tab==='workout' ? '' : 'none';
+    document.getElementById('tab-quiz').style.display = tab.dataset.tab==='quiz' ? '' : 'none';
+    document.getElementById('tab-analytics').style.display = tab.dataset.tab==='analytics' ? '' : 'none';
+    document.getElementById('tab-mistakes').style.display = tab.dataset.tab==='mistakes' ? '' : 'none';
+    document.getElementById('tab-priority').style.display = tab.dataset.tab==='priority' ? '' : 'none';
+    if(tab.dataset.tab==='catchup') renderCatchup();
+    if(tab.dataset.tab==='backlog') renderBacklog();
+    if(tab.dataset.tab==='workout') renderWorkout();
+    if(tab.dataset.tab==='quiz') renderQuizTab();
+    if(tab.dataset.tab==='analytics') renderAnalytics();
+    if(tab.dataset.tab==='mistakes') renderMistakes();
+    if(tab.dataset.tab==='priority') renderPriority();
+  };
+});
+
+(async function init(){
+  await loadProgress();
+  await loadScheduleCache();
+  await loadMistakes();
+  await loadQuizHistory();
+  await loadPriorityConfig();
+  render();
+})();
+</script>
+</body>
+</html>
